@@ -1,10 +1,10 @@
 # Property Insights Pro
 
-Property Insights Pro is a Next.js application designed to provide comprehensive property redevelopment analysis. It leverages the PaTMa API for property data, Genkit for AI-powered insights and summaries, and Mapbox for location visualization. Users can input a UK postcode and a PaTMa API key to generate a detailed report covering various aspects of a property's potential.
+Property Insights Pro is a Next.js application designed to provide comprehensive property redevelopment analysis. It leverages the PaTMa API for property data, Genkit for AI-powered insights and summaries, and Mapbox for location visualization. Users can input a UK postcode to generate a detailed report covering various aspects of a property's potential.
 
 ## Features
 
-- **Dynamic Report Generation:** Input a UK postcode and PaTMa API key to generate a multi-section report.
+- **Dynamic Report Generation:** Input a UK postcode to generate a multi-section report.
 - **Executive Summary:** AI-generated summary of the property's redevelopment potential.
 - **Valuation & Market Analysis:**
     - Local asking and sold prices (last 5 years).
@@ -28,6 +28,10 @@ Property Insights Pro is a Next.js application designed to provide comprehensive
     - Flood risk assessment (Rivers/Sea, Surface Water, Reservoirs).
     - Air Quality Index (AQI) and category.
     - Historical climate data (average rainfall, temperature).
+    - Tree Coverage data.
+    - Soil Type data.
+    - Water Source data.
+    - Nearby Industrial Activity data.
 - **Transport Links:**
     - Nearby transport options (train, bus, road access) and their proximity.
 - **Financial Feasibility:**
@@ -82,11 +86,12 @@ Property Insights Pro is a Next.js application designed to provide comprehensive
 
 ### Environment Variables
 
-Create a `.env` file in the root of the project and add your Google AI API key:
+Create a `.env` file in the root of the project and add your Google AI API key and your PaTMa API key:
 
 ```env
 # .env
 GOOGLE_API_KEY=YOUR_GOOGLE_AI_API_KEY
+PATMA_API_KEY=YOUR_PATMA_API_KEY_HERE 
 ```
 
 Create a `.env.local` file in the root of the project and add your Mapbox access token and optionally, your Mapbox style ID:
@@ -99,7 +104,7 @@ NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=YOUR_MAPBOX_ACCESS_TOKEN
 # NEXT_PUBLIC_MAPBOX_STYLE_ID=yourusername/yourstyleid 
 ```
 
-**Note:** The PaTMa API key is currently entered directly in the UI. The application will store it in `localStorage` for convenience.
+**Note:** The PaTMa API key is now configured in the `.env` file. The application will read it from there.
 
 ### Installation
 
@@ -197,8 +202,12 @@ The application uses a mocked version of the PaTMa API, defined in `src/services
 -   Historical Climate Data
 -   Transport Links
 -   Administrative Boundaries (simulating MapIt)
+-   Tree Coverage Data
+-   Soil Type Data
+-   Water Source Data
+-   Industrial Activity Data
 
-The PaTMa API key is required by the UI form but is only used by the mock functions to demonstrate data fetching flow.
+The PaTMa API key is configured via the `PATMA_API_KEY` environment variable in the `.env` file.
 
 ### Genkit (Google AI)
 

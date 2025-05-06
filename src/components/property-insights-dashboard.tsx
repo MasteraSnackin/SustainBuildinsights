@@ -20,25 +20,24 @@ import { CaseStudies } from './property-insights/case-studies';
 import { EnergyClimateEnvironment } from './property-insights/energy-climate-environment';
 import { TransportLinks } from './property-insights/transport-links';
 import { MapLocation } from './property-insights/map-location';
-// ReportChatbot removed from here
 
 import {
   getAskingPrices, getSoldPrices, getPriceTrends, getPlanningApplications,
   getConservationAreas, getSchools, getCrimeRates, getDemographics,
   getStampDuty, getRentEstimates, getSoldPricesFloorArea, getRentalComparables,
   getEpcData, getFloodRiskData, getAirQualityData, getHistoricalClimateData, getTransportLinks,
-  getAdministrativeBoundaries,
+  getAdministrativeBoundaries, getTreeCoverageData, getSoilTypeData, getWaterSourceData, getIndustrialActivityData,
   type AskingPrice, type SoldPrice, type PriceTrends as PriceTrendData, type PlanningApplication,
   type ConservationArea, type School, type CrimeRates as CrimeRatesData, type Demographics as DemographicsData,
   type StampDuty as StampDutyData, type RentEstimates as RentEstimatesData, type SoldPricesFloorArea as SoldPricesFloorAreaData, type RentalComparables as RentalComparablesData,
   type EpcData as EpcApiData, type FloodRiskData as FloodRiskApiData, type AirQualityData as AirQualityApiData, type HistoricalClimateData as HistoricalClimateApiData, type TransportLink,
-  type AdministrativeBoundaries
+  type AdministrativeBoundaries, type TreeCoverageData as TreeCoverageApiData, type SoilTypeData as SoilTypeApiData, type WaterSourceData as WaterSourceApiData, type IndustrialActivityData as IndustrialActivityApiData,
 } from '@/services/patma';
 import { generateExecutiveSummary, type GenerateExecutiveSummaryInput, type GenerateExecutiveSummaryOutput } from '@/ai/flows/generate-executive-summary';
 
 const formSchema = z.object({
   postcode: z.string().min(3, { message: 'Postcode must be at least 3 characters.' }).regex(/^[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][A-Z]{2}$/i, { message: 'Invalid UK postcode format.'}),
-  apiKey: z.string().min(1, {message: "PaTMa API Key is required."})
+  // apiKey field removed
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -75,6 +74,11 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
   const [historicalClimateData, setHistoricalClimateData] = useState<HistoricalClimateApiData | null>(null);
   const [transportLinks, setTransportLinks] = useState<TransportLink[] | null>(null);
   const [administrativeBoundaries, setAdministrativeBoundaries] = useState<AdministrativeBoundaries | null>(null);
+  const [treeCoverageData, setTreeCoverageData] = useState<TreeCoverageApiData | null>(null);
+  const [soilTypeData, setSoilTypeData] = useState<SoilTypeApiData | null>(null);
+  const [waterSourceData, setWaterSourceData] = useState<WaterSourceApiData | null>(null);
+  const [industrialActivityData, setIndustrialActivityData] = useState<IndustrialActivityApiData | null>(null);
+
 
   const [submittedPostcode, setSubmittedPostcode] = useState<string | null>(null);
   const [submittedPropertyPrice, setSubmittedPropertyPrice] = useState<number | undefined>(undefined);
@@ -84,16 +88,11 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
     resolver: zodResolver(formSchema),
     defaultValues: {
       postcode: '',
-      apiKey: '',
+      // apiKey default removed
     },
   });
 
-  useEffect(() => {
-    const storedApiKey = localStorage.getItem('patmaApiKey');
-    if (storedApiKey) {
-      form.setValue('apiKey', storedApiKey);
-    }
-  }, [form]);
+  // Removed useEffect for loading apiKey from localStorage
 
   useEffect(() => {
     onLoadingChange(isLoading);
@@ -108,7 +107,7 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
         onReportDataFetched({ executiveSummary, submittedPostcode });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [executiveSummary, submittedPostcode]); // Only trigger when these specific states change
+  }, [executiveSummary, submittedPostcode]); 
 
 
   const handleGenerateReport: SubmitHandler<FormValues> = async (data) => {
@@ -118,7 +117,7 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
     const mockPropertyPrice = 500000; 
     setSubmittedPropertyPrice(mockPropertyPrice);
 
-    localStorage.setItem('patmaApiKey', data.apiKey);
+    // Removed localStorage.setItem for apiKey
     
     try {
       const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -137,7 +136,7 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
         conservationAreasData, schoolsData, crimeRatesData, demographicsData,
         stampDutyData, rentEstimatesData, soldPricesFloorAreaData, rentalComparablesData,
         epcApiData, floodRiskApiDataResult, airQualityApiData, historicalClimateApiData, transportLinksData,
-        adminBoundariesData
+        adminBoundariesData, treeCoverageApiData, soilTypeApiData, waterSourceApiData, industrialActivityApiData
       ] = await Promise.all([
         fetchDataWithRateLimit(() => getAskingPrices(data.postcode)),
         fetchDataWithRateLimit(() => getSoldPrices(data.postcode)),
@@ -156,7 +155,11 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
         fetchDataWithRateLimit(() => getAirQualityData(data.postcode)),
         fetchDataWithRateLimit(() => getHistoricalClimateData(data.postcode)),
         fetchDataWithRateLimit(() => getTransportLinks(data.postcode)),
-        fetchDataWithRateLimit(() => getAdministrativeBoundaries(data.postcode))
+        fetchDataWithRateLimit(() => getAdministrativeBoundaries(data.postcode)),
+        fetchDataWithRateLimit(() => getTreeCoverageData(data.postcode)),
+        fetchDataWithRateLimit(() => getSoilTypeData(data.postcode)),
+        fetchDataWithRateLimit(() => getWaterSourceData(data.postcode)),
+        fetchDataWithRateLimit(() => getIndustrialActivityData(data.postcode)),
       ]);
 
       setAskingPrices(askingPricesData);
@@ -177,6 +180,10 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
       setHistoricalClimateData(historicalClimateApiData);
       setTransportLinks(transportLinksData);
       setAdministrativeBoundaries(adminBoundariesData);
+      setTreeCoverageData(treeCoverageApiData);
+      setSoilTypeData(soilTypeApiData);
+      setWaterSourceData(waterSourceApiData);
+      setIndustrialActivityData(industrialActivityApiData);
       
       const executiveSummaryInput: GenerateExecutiveSummaryInput = {
         postcode: data.postcode,
@@ -194,21 +201,20 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
         title: 'Error',
         description: `Failed to generate report. ${errorMessage}`,
       });
-      // Reset summary if error occurs
       setExecutiveSummary(null); 
     } finally {
       setIsLoading(false);
     }
   };
   
-  const isAnyDataAvailable = executiveSummary || askingPrices || soldPrices || priceTrends || planningApplications || conservationAreas || schools || crimeRates || demographics || stampDuty || rentEstimates || soldPricesFloorArea || rentalComparables || epcData || floodRiskData || airQualityData || historicalClimateData || transportLinks || administrativeBoundaries;
+  const isAnyDataAvailable = executiveSummary || askingPrices || soldPrices || priceTrends || planningApplications || conservationAreas || schools || crimeRates || demographics || stampDuty || rentEstimates || soldPricesFloorArea || rentalComparables || epcData || floodRiskData || airQualityData || historicalClimateData || transportLinks || administrativeBoundaries || treeCoverageData || soilTypeData || waterSourceData || industrialActivityData;
 
 
   return (
     <div className="container mx-auto p-4 md:p-8">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleGenerateReport)} className="mb-8 p-6 bg-card rounded-lg shadow-md">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6 items-end"> {/* Changed md:grid-cols-2 to md:grid-cols-1 */}
             <FormField
               control={form.control}
               name="postcode"
@@ -222,26 +228,14 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="apiKey"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PaTMa API Key</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="Enter your PaTMa API Key" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* PaTMa API Key FormField removed */}
           </div>
           <Button type="submit" disabled={isLoading} className="mt-6 w-full md:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Generate Report
           </Button>
            <p className="text-xs text-muted-foreground mt-2">
-            PaTMa API calls are subject to rate limits (typically 10 calls/minute) and credit costs (£0.002–£0.008 per call). Data freshness depends on PaTMa's last_updated fields. Free tier APIs for Energy/Climate/Transport/MapIt may have their own rate limits. Mapbox static images API may require an access token.
+            PaTMa API calls (mocked) are subject to rate limits and credit costs. Data freshness depends on API's last_updated fields. Free tier APIs for Energy/Climate/Transport/MapIt may have their own rate limits. Mapbox static images API may require an access token. Ensure `PATMA_API_KEY` is set in your `.env` file.
           </p>
         </form>
       </Form>
@@ -263,7 +257,7 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
 
 
       {isAnyDataAvailable && (
-        <div className="space-y-8"> {/* Removed lg:grid and lg:col-span-2 for main content */}
+        <div className="space-y-8">
             <ExecutiveSummary summaryData={executiveSummary} isLoading={isLoading && !executiveSummary} />
             <MapLocation 
               postcode={submittedPostcode} 
@@ -294,7 +288,11 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
               floodRiskData={floodRiskData}
               airQualityData={airQualityData}
               historicalClimateData={historicalClimateData}
-              isLoading={isLoading && (!epcData || !floodRiskData || !airQualityData || !historicalClimateData)}
+              treeCoverageData={treeCoverageData}
+              soilTypeData={soilTypeData}
+              waterSourceData={waterSourceData}
+              industrialActivityData={industrialActivityData}
+              isLoading={isLoading && (!epcData || !floodRiskData || !airQualityData || !historicalClimateData || !treeCoverageData || !soilTypeData || !waterSourceData || !industrialActivityData)}
             />
             <TransportLinks
               transportLinks={transportLinks}
@@ -318,10 +316,9 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
         <div className="text-center py-12">
           <Image src="https://picsum.photos/seed/property/400/300" alt="Property Illustration" data-ai-hint="property illustration" className="mx-auto mb-6 rounded-lg shadow-md" width={400} height={300} />
           <h2 className="text-2xl font-semibold text-primary mb-2">Welcome to Property Insights Pro</h2>
-          <p className="text-muted-foreground">Enter a postcode and PaTMa API key above to generate your detailed redevelopment potential report.</p>
+          <p className="text-muted-foreground">Enter a postcode above to generate your detailed redevelopment potential report. Ensure `PATMA_API_KEY` is set in your `.env` file.</p>
         </div>
       )}
     </div>
   );
 }
-
