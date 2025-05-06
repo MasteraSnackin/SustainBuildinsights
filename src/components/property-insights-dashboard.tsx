@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,17 +18,18 @@ import { NeighborhoodInsights } from './property-insights/neighborhood-insights'
 import { FinancialFeasibility } from './property-insights/financial-feasibility';
 import { CaseStudies } from './property-insights/case-studies';
 import { EnergyClimateEnvironment } from './property-insights/energy-climate-environment';
+import { TransportLinks } from './property-insights/transport-links';
 
 
 import {
   getAskingPrices, getSoldPrices, getPriceTrends, getPlanningApplications,
   getConservationAreas, getSchools, getCrimeRates, getDemographics,
   getStampDuty, getRentEstimates, getSoldPricesFloorArea, getRentalComparables,
-  getEpcData, getFloodRiskData, getAirQualityData, getHistoricalClimateData,
+  getEpcData, getFloodRiskData, getAirQualityData, getHistoricalClimateData, getTransportLinks,
   type AskingPrice, type SoldPrice, type PriceTrends, type PlanningApplication,
   type ConservationArea, type School, type CrimeRates as CrimeRatesData, type Demographics as DemographicsData,
   type StampDuty as StampDutyData, type RentEstimates as RentEstimatesData, type SoldPricesFloorArea as SoldPricesFloorAreaData, type RentalComparables as RentalComparablesData,
-  type EpcData, type FloodRiskData, type AirQualityData, type HistoricalClimateData
+  type EpcData, type FloodRiskData, type AirQualityData, type HistoricalClimateData, type TransportLink
 } from '@/services/patma';
 import { generateExecutiveSummary, type GenerateExecutiveSummaryInput, type GenerateExecutiveSummaryOutput } from '@/ai/flows/generate-executive-summary';
 
@@ -64,6 +66,7 @@ export function PropertyInsightsDashboard() {
   const [floodRiskData, setFloodRiskData] = useState<FloodRiskData | null>(null);
   const [airQualityData, setAirQualityData] = useState<AirQualityData | null>(null);
   const [historicalClimateData, setHistoricalClimateData] = useState<HistoricalClimateData | null>(null);
+  const [transportLinks, setTransportLinks] = useState<TransportLink[] | null>(null);
 
   const [currentPropertyPrice, setCurrentPropertyPrice] = useState<number | undefined>(undefined);
 
@@ -108,7 +111,7 @@ export function PropertyInsightsDashboard() {
         askingPricesData, soldPricesData, priceTrendsData, planningApplicationsData,
         conservationAreasData, schoolsData, crimeRatesData, demographicsData,
         stampDutyData, rentEstimatesData, soldPricesFloorAreaData, rentalComparablesData,
-        epcApiData, floodRiskApiData, airQualityApiData, historicalClimateApiData
+        epcApiData, floodRiskApiData, airQualityApiData, historicalClimateApiData, transportLinksData
       ] = await Promise.all([
         fetchDataWithRateLimit(() => getAskingPrices(data.postcode)),
         fetchDataWithRateLimit(() => getSoldPrices(data.postcode)),
@@ -126,6 +129,7 @@ export function PropertyInsightsDashboard() {
         fetchDataWithRateLimit(() => getFloodRiskData(data.postcode)),
         fetchDataWithRateLimit(() => getAirQualityData(data.postcode)),
         fetchDataWithRateLimit(() => getHistoricalClimateData(data.postcode)),
+        fetchDataWithRateLimit(() => getTransportLinks(data.postcode)),
       ]);
 
       setAskingPrices(askingPricesData);
@@ -144,6 +148,7 @@ export function PropertyInsightsDashboard() {
       setFloodRiskData(floodRiskApiData);
       setAirQualityData(airQualityApiData);
       setHistoricalClimateData(historicalClimateApiData);
+      setTransportLinks(transportLinksData);
       
       const executiveSummaryInput: GenerateExecutiveSummaryInput = {
         postcode: data.postcode,
@@ -167,7 +172,7 @@ export function PropertyInsightsDashboard() {
     }
   };
   
-  const isAnyDataAvailable = executiveSummary || askingPrices || soldPrices || priceTrends || planningApplications || conservationAreas || schools || crimeRates || demographics || stampDuty || rentEstimates || soldPricesFloorArea || rentalComparables || epcData || floodRiskData || airQualityData || historicalClimateData;
+  const isAnyDataAvailable = executiveSummary || askingPrices || soldPrices || priceTrends || planningApplications || conservationAreas || schools || crimeRates || demographics || stampDuty || rentEstimates || soldPricesFloorArea || rentalComparables || epcData || floodRiskData || airQualityData || historicalClimateData || transportLinks;
 
 
   return (
@@ -220,7 +225,7 @@ export function PropertyInsightsDashboard() {
             Generate Report
           </Button>
            <p className="text-xs text-muted-foreground mt-2">
-            PaTMa API calls are subject to rate limits (typically 10 calls/minute) and credit costs (£0.002–£0.008 per call). Data freshness depends on PaTMa's last_updated fields. Free tier APIs for Energy/Climate may have their own rate limits.
+            PaTMa API calls are subject to rate limits (typically 10 calls/minute) and credit costs (£0.002–£0.008 per call). Data freshness depends on PaTMa's last_updated fields. Free tier APIs for Energy/Climate/Transport may have their own rate limits.
           </p>
         </form>
       </Form>
@@ -268,6 +273,10 @@ export function PropertyInsightsDashboard() {
             airQualityData={airQualityData}
             historicalClimateData={historicalClimateData}
             isLoading={isLoading && (!epcData || !floodRiskData || !airQualityData || !historicalClimateData)}
+          />
+           <TransportLinks
+            transportLinks={transportLinks}
+            isLoading={isLoading && !transportLinks}
           />
           <FinancialFeasibility
             stampDuty={stampDuty}

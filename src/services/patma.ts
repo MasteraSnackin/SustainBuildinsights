@@ -518,3 +518,48 @@ export async function getHistoricalClimateData(postcode: string): Promise<Histor
     source: "Mock Climate Data Service (General UK Averages)"
   };
 }
+
+
+/**
+ * Represents a transport link.
+ */
+export interface TransportLink {
+  /** Type of transport (e.g., "Train Station", "Bus Stop", "Motorway Junction") */
+  type: string;
+  /** Name of the station, stop, or junction */
+  name: string;
+  /** Approximate distance in miles */
+  distanceMiles: number;
+  /** Typical journey time to a major hub (e.g., "London Euston: 45 mins") - optional */
+  journeyTimeToHub?: string;
+}
+
+/**
+ * Retrieves transport links for a given postcode.
+ * @param postcode The postcode to search for.
+ * @returns A promise that resolves to an array of TransportLink objects or null.
+ */
+export async function getTransportLinks(postcode: string): Promise<TransportLink[] | null> {
+  // TODO: Implement this by calling a transport API (e.g., TransportAPI, Google Maps API - may require API keys and budget)
+  // Mock data for now
+  if (postcode.startsWith("SW1A")) { // Example for central London
+    return [
+      { type: "Train Station", name: "Charing Cross Station", distanceMiles: 0.5, journeyTimeToHub: "Various London Termini" },
+      { type: "Tube Station", name: "Westminster Station", distanceMiles: 0.3, journeyTimeToHub: "Multiple Lines" },
+      { type: "Bus Stop", name: "Trafalgar Square (Stop T)", distanceMiles: 0.2 },
+      { type: "Motorway Access", name: "M4 J1 (via A4)", distanceMiles: 8.0 },
+    ];
+  } else if (postcode.startsWith("M1")) { // Example for Manchester
+     return [
+      { type: "Train Station", name: "Manchester Piccadilly", distanceMiles: 1.2, journeyTimeToHub: "London Euston: 2hr 10m" },
+      { type: "Tram Stop", name: "Piccadilly Gardens Metrolink", distanceMiles: 1.0 },
+      { type: "Bus Stop", name: "Various on Portland Street", distanceMiles: 0.8 },
+      { type: "Motorway Access", name: "M602 J3", distanceMiles: 2.5 },
+    ];
+  }
+  return [ // Generic fallback
+    { type: "Train Station", name: "Local Mainline Station", distanceMiles: 2.1, journeyTimeToHub: "City Centre: 25 mins" },
+    { type: "Bus Stop", name: "High Street (Stop B)", distanceMiles: 0.4 },
+    { type: "Motorway Access", name: "M0 J5", distanceMiles: 3.5 },
+  ];
+}
