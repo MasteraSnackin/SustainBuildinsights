@@ -20,9 +20,21 @@ export function ValuationMarketAnalysis({
   currentAskingPrice,
   isLoading,
 }: ValuationMarketAnalysisProps) {
-  const latestAskingPrice = askingPrices && askingPrices.length > 0 ? askingPrices[0].price : undefined;
-  const averageSoldPrice = soldPrices && soldPrices.length > 0 
-    ? soldPrices.reduce((sum, p) => sum + p.price, 0) / soldPrices.length 
+  const fiveYearsAgo = new Date();
+  fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+
+  const recentAskingPrices = askingPrices
+    ?.filter(price => new Date(price.date) >= fiveYearsAgo)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const recentSoldPrices = soldPrices
+    ?.filter(price => new Date(price.date) >= fiveYearsAgo)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+  const latestAskingPriceLocal = recentAskingPrices && recentAskingPrices.length > 0 ? recentAskingPrices[0].price : undefined;
+  
+  const averageSoldPriceLocal = recentSoldPrices && recentSoldPrices.length > 0 
+    ? recentSoldPrices.reduce((sum, p) => sum + p.price, 0) / recentSoldPrices.length 
     : undefined;
 
   return (
@@ -30,25 +42,27 @@ export function ValuationMarketAnalysis({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <DataDisplay label="Current Property Asking Price" value={currentAskingPrice} unit="GBP" citationNumber={1} />
-          <DataDisplay label="Latest Local Asking Price (from API)" value={latestAskingPrice} unit="GBP" citationNumber={1} />
-          <DataDisplay label="Average Local Sold Price (from API)" value={averageSoldPrice ? Math.round(averageSoldPrice) : undefined} unit="GBP" citationNumber={2} />
+          <DataDisplay label="Latest Local Asking Price (last 5 years)" value={latestAskingPriceLocal} unit="GBP" citationNumber={1} />
+          <DataDisplay label="Average Local Sold Price (last 5 years)" value={averageSoldPriceLocal ? Math.round(averageSoldPriceLocal) : undefined} unit="GBP" citationNumber={2} />
           
           <DataListDisplay
-            label="Recent Asking Prices"
-            items={askingPrices}
+            label="Asking Prices (last 5 years)"
+            items={recentAskingPrices?.slice(0, 5)} // Display top 5 recent for brevity
             renderItem={(item) => `£${item.price.toLocaleString()} (Listed: ${new Date(item.date).toLocaleDateString()})`}
             citationNumber={1}
+            emptyMessage="No asking prices found in the last 5 years."
           />
         </div>
         <div>
           <DataListDisplay
-            label="Recent Sold Prices"
-            items={soldPrices}
+            label="Sold Prices (last 5 years)"
+            items={recentSoldPrices?.slice(0,5)} // Display top 5 recent for brevity
             renderItem={(item) => `£${item.price.toLocaleString()} (Sold: ${new Date(item.date).toLocaleDateString()})`}
             citationNumber={2}
+            emptyMessage="No sold prices found in the last 5 years."
           />
            {/* Placeholder for price-per-floor-area */}
-          <DataDisplay label="Price-per-Floor-Area" value="Data pending API for floor area" citationNumber={6} />
+          <DataDisplay label="Price-per-Floor-Area (Recent Examples)" value="Data from Sold Prices Floor Area API" citationNumber={11} />
         </div>
       </div>
       
@@ -62,7 +76,7 @@ export function ValuationMarketAnalysis({
           </div>
         )}
         <p className="text-xs text-muted-foreground mt-2">
-          Citations: [1] Asking Prices API, [2] Sold Prices API, [3] Price Trends API, [6] Sold Prices Floor Area API.
+          Citations: [1] Asking Prices API, [2] Sold Prices API, [3] Price Trends API, [11] Sold Prices Floor Area API.
         </p>
       </div>
     </ReportSection>

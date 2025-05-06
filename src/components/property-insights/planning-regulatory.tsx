@@ -16,35 +16,44 @@ export function PlanningRegulatory({
   isLoading,
 }: PlanningRegulatoryProps) {
   
-  const recentApproved = planningApplications?.filter(app => app.status.toLowerCase() === "approved" && new Date(app.date) > new Date(new Date().setFullYear(new Date().getFullYear() - 2)));
-  const recentRejected = planningApplications?.filter(app => app.status.toLowerCase() !== "approved" && new Date(app.date) > new Date(new Date().setFullYear(new Date().getFullYear() - 2)));
+  const fiveYearsAgo = new Date();
+  fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+
+  const recentApplications = planningApplications?.filter(app => new Date(app.date) >= fiveYearsAgo)
+    .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const recentApproved = recentApplications?.filter(app => app.status.toLowerCase() === "approved");
+  const recentRejectedOrOther = recentApplications?.filter(app => app.status.toLowerCase() !== "approved");
 
   return (
     <ReportSection title="Planning & Regulatory Landscape" isLoading={isLoading} icon={<Gavel />}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <DataListDisplay
-            label="Recent Approved Planning Applications (last 2 years)"
-            items={recentApproved}
-            renderItem={(app) => `${app.applicationId} - ${app.status} (${new Date(app.date).toLocaleDateString()})`}
+            label="Approved Planning Applications (last 5 years)"
+            items={recentApproved?.slice(0, 5)} // Display top 5 for brevity
+            renderItem={(app) => `${app.applicationId} - ${app.description} (${new Date(app.date).toLocaleDateString()})`}
             citationNumber={4}
+            emptyMessage="No approved planning applications found in the last 5 years."
           />
         </div>
         <div>
           <DataListDisplay
-            label="Recent Rejected/Other Planning Applications (last 2 years)"
-            items={recentRejected}
-            renderItem={(app) => `${app.applicationId} - ${app.status} (${new Date(app.date).toLocaleDateString()})`}
+            label="Rejected/Other Status Planning Applications (last 5 years)"
+            items={recentRejectedOrOther?.slice(0, 5)} // Display top 5 for brevity
+            renderItem={(app) => `${app.applicationId} - ${app.status} - ${app.description} (${new Date(app.date).toLocaleDateString()})`}
             citationNumber={4}
+            emptyMessage="No rejected or other status planning applications found in the last 5 years."
           />
         </div>
       </div>
       <div className="mt-4">
         <DataListDisplay
-          label="Conservation Areas"
+          label="Conservation Areas Affecting Postcode"
           items={conservationAreas}
           renderItem={(area) => area.name}
           citationNumber={5}
+          emptyMessage="No conservation areas listed for this postcode."
         />
         {/* Placeholder for Article 4 assessment */}
         <p className="text-sm mt-2">

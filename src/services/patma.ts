@@ -19,11 +19,15 @@ export interface AskingPrice {
  */
 export async function getAskingPrices(postcode: string): Promise<AskingPrice[]> {
   // TODO: Implement this by calling the PaTMa API.
+  const today = new Date();
   return [
-    {
-      price: 500000,
-      date: '2024-01-01',
-    },
+    { price: 500000, date: today.toISOString().split('T')[0] },
+    { price: 495000, date: new Date(today.getFullYear() - 1, today.getMonth(), today.getDate()).toISOString().split('T')[0] },
+    { price: 480000, date: new Date(today.getFullYear() - 2, today.getMonth(), today.getDate()).toISOString().split('T')[0] },
+    { price: 470000, date: new Date(today.getFullYear() - 3, today.getMonth(), today.getDate()).toISOString().split('T')[0] },
+    { price: 460000, date: new Date(today.getFullYear() - 4, today.getMonth(), today.getDate()).toISOString().split('T')[0] },
+    { price: 450000, date: new Date(today.getFullYear() - 5, today.getMonth(), today.getDate()).toISOString().split('T')[0] },
+     { price: 440000, date: new Date(today.getFullYear() - 6, today.getMonth(), today.getDate()).toISOString().split('T')[0] }, // Older than 5 years
   ];
 }
 
@@ -48,11 +52,15 @@ export interface SoldPrice {
  */
 export async function getSoldPrices(postcode: string): Promise<SoldPrice[]> {
   // TODO: Implement this by calling the PaTMa API.
+  const today = new Date();
   return [
-    {
-      price: 450000,
-      date: '2023-12-01',
-    },
+    { price: 485000, date: new Date(today.getFullYear(), today.getMonth() -1, today.getDate()).toISOString().split('T')[0] },
+    { price: 475000, date: new Date(today.getFullYear() - 1, today.getMonth()-1, today.getDate()).toISOString().split('T')[0] },
+    { price: 460000, date: new Date(today.getFullYear() - 2, today.getMonth()-1, today.getDate()).toISOString().split('T')[0] },
+    { price: 450000, date: new Date(today.getFullYear() - 3, today.getMonth()-1, today.getDate()).toISOString().split('T')[0] },
+    { price: 440000, date: new Date(today.getFullYear() - 4, today.getMonth()-1, today.getDate()).toISOString().split('T')[0] },
+    { price: 430000, date: new Date(today.getFullYear() - 5, today.getMonth()-1, today.getDate()).toISOString().split('T')[0] },
+    { price: 420000, date: new Date(today.getFullYear() - 6, today.getMonth()-1, today.getDate()).toISOString().split('T')[0] }, // Older than 5 years
   ];
 }
 
@@ -77,12 +85,17 @@ export interface PriceTrends {
  */
 export async function getPriceTrends(postcode: string): Promise<PriceTrends[]> {
   // TODO: Implement this by calling the PaTMa API.
-  return [
-    {
-      averagePrice: 475000,
-      date: '2024-01-01',
-    },
-  ];
+  // Mock data to represent 5 years of trends, monthly data points
+  const today = new Date();
+  const trends: PriceTrends[] = [];
+  for (let i = 0; i < 60; i++) { // 5 years * 12 months
+    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    trends.push({
+      averagePrice: 475000 - (i * 1000) + (Math.random() * 20000 - 10000), // Simulate some fluctuation
+      date: date.toISOString().split('T')[0],
+    });
+  }
+  return trends.reverse(); // Ensure chronological order
 }
 
 /**
@@ -101,6 +114,10 @@ export interface PlanningApplication {
    * The date of the application.
    */
   date: string;
+  /**
+   * A brief description or proposal of the planning application.
+   */
+  description: string;
 }
 
 /**
@@ -110,12 +127,15 @@ export interface PlanningApplication {
  */
 export async function getPlanningApplications(postcode: string): Promise<PlanningApplication[]> {
   // TODO: Implement this by calling the PaTMa API.
+  const today = new Date();
   return [
-    {
-      applicationId: '12345',
-      status: 'approved',
-      date: '2024-01-01',
-    },
+    { applicationId: 'PA/24/00123', status: 'approved', date: today.toISOString().split('T')[0], description: 'Rear extension' },
+    { applicationId: 'PA/23/00456', status: 'rejected', date: new Date(today.getFullYear() - 1, today.getMonth(), today.getDate()).toISOString().split('T')[0], description: 'Loft conversion with dormer' },
+    { applicationId: 'PA/22/00789', status: 'approved', date: new Date(today.getFullYear() - 2, today.getMonth(), today.getDate()).toISOString().split('T')[0], description: 'Change of use from C3 to C4 (HMO)' },
+    { applicationId: 'PA/21/00101', status: 'approved', date: new Date(today.getFullYear() - 3, today.getMonth(), today.getDate()).toISOString().split('T')[0], description: 'New build dwelling in garden' },
+    { applicationId: 'PA/20/00112', status: 'pending', date: new Date(today.getFullYear() - 4, today.getMonth(), today.getDate()).toISOString().split('T')[0], description: 'Garage conversion' },
+    { applicationId: 'PA/19/00131', status: 'approved', date: new Date(today.getFullYear() - 5, today.getMonth(), today.getDate()).toISOString().split('T')[0], description: 'Two storey side extension' },
+    { applicationId: 'PA/18/00145', status: 'rejected', date: new Date(today.getFullYear() - 6, today.getMonth(), today.getDate()).toISOString().split('T')[0], description: 'Demolition and rebuild' }, // Older than 5 years
   ];
 }
 
@@ -140,6 +160,9 @@ export async function getConservationAreas(postcode: string): Promise<Conservati
     {
       name: 'Test Conservation Area',
     },
+    {
+      name: 'Another Local Conservation Zone',
+    }
   ];
 }
 
@@ -166,9 +189,17 @@ export async function getSchools(postcode: string): Promise<School[]> {
   // TODO: Implement this by calling the PaTMa API.
   return [
     {
-      name: 'Test School',
+      name: 'Primary School Alpha',
       ofstedRating: 'Good',
     },
+    {
+      name: 'Secondary School Beta',
+      ofstedRating: 'Outstanding',
+    },
+    {
+      name: 'Independent School Gamma',
+      ofstedRating: 'Requires Improvement',
+    }
   ];
 }
 
@@ -194,10 +225,11 @@ export interface CrimeRates {
 export async function getCrimeRates(postcode: string): Promise<CrimeRates[]> {
   // TODO: Implement this by calling the PaTMa API.
   return [
-    {
-      type: 'Burglary',
-      rate: 10,
-    },
+    { type: 'Burglary', rate: 10 },
+    { type: 'Vehicle crime', rate: 15 },
+    { type: 'Anti-social behaviour', rate: 25 },
+    { type: 'Violence and sexual offences', rate: 8 },
+    { type: 'Other theft', rate: 12 },
   ];
 }
 
@@ -223,10 +255,12 @@ export interface Demographics {
 export async function getDemographics(postcode: string): Promise<Demographics[]> {
   // TODO: Implement this by calling the PaTMa API.
   return [
-    {
-      age: '25-34',
-      income: 30000,
-    },
+    { age: '18-24', income: 25000 },
+    { age: '25-34', income: 35000 },
+    { age: '35-44', income: 45000 },
+    { age: '45-54', income: 50000 },
+    { age: '55-64', income: 40000 },
+    { age: '65+', income: 30000 },
   ];
 }
 
@@ -247,8 +281,19 @@ export interface StampDuty {
  */
 export async function getStampDuty(price: number): Promise<StampDuty> {
   // TODO: Implement this by calling the PaTMa API.
+  // Simplified calculation for mock
+  let amount = 0;
+  if (price > 250000) {
+    amount += (Math.min(price, 925000) - 250000) * 0.05;
+  }
+  if (price > 925000) {
+    amount += (Math.min(price, 1500000) - 925000) * 0.10;
+  }
+  if (price > 1500000) {
+    amount += (price - 1500000) * 0.12;
+  }
   return {
-    amount: 5000,
+    amount: Math.round(amount),
   };
 }
 
@@ -270,7 +315,7 @@ export interface RentEstimates {
 export async function getRentEstimates(postcode: string): Promise<RentEstimates> {
   // TODO: Implement this by calling the PaTMa API.
   return {
-    averageRent: 1500,
+    averageRent: 1500 + (Math.random() * 500 - 250), // Simulate some variance
   };
 }
 
@@ -282,6 +327,10 @@ export interface SoldPricesFloorArea {
    * The price per floor area.
    */
   pricePerFloorArea: number;
+  /**
+   * The date the property was sold (added for consistency, though not strictly required by user for this specific mock)
+   */
+  date: string;
 }
 
 /**
@@ -291,10 +340,11 @@ export interface SoldPricesFloorArea {
  */
 export async function getSoldPricesFloorArea(postcode: string): Promise<SoldPricesFloorArea[]> {
   // TODO: Implement this by calling the PaTMa API.
+  const today = new Date();
   return [
-    {
-      pricePerFloorArea: 2000,
-    },
+    { pricePerFloorArea: 2000, date: new Date(today.getFullYear() - 0, today.getMonth() - 2, 15).toISOString().split('T')[0] },
+    { pricePerFloorArea: 1950, date: new Date(today.getFullYear() - 1, today.getMonth() - 5, 10).toISOString().split('T')[0] },
+    { pricePerFloorArea: 2100, date: new Date(today.getFullYear() - 2, today.getMonth() - 8, 20).toISOString().split('T')[0] },
   ];
 }
 
@@ -306,6 +356,14 @@ export interface RentalComparables {
    * The average rent.
    */
   averageRent: number;
+  /**
+   * Property type (added for more realistic data)
+   */
+  propertyType: string;
+  /**
+   * Number of bedrooms (added for more realistic data)
+   */
+  bedrooms: number;
 }
 
 /**
@@ -316,8 +374,8 @@ export interface RentalComparables {
 export async function getRentalComparables(postcode: string): Promise<RentalComparables[]> {
   // TODO: Implement this by calling the PaTMa API.
   return [
-    {
-      averageRent: 1600,
-    },
+    { averageRent: 1600, propertyType: 'Flat', bedrooms: 2 },
+    { averageRent: 1450, propertyType: 'Terraced House', bedrooms: 3 },
+    { averageRent: 1750, propertyType: 'Semi-Detached', bedrooms: 3 },
   ];
 }
