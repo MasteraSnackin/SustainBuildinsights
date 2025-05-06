@@ -1,12 +1,12 @@
 'use client';
 
 import type { ChangeEvent, FormEvent } from 'react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, User, Send, Loader2, Mic, MicOff } from 'lucide-react';
+import { Bot, User, Send, Loader2, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { chatWithReport, type ChatWithReportInput } from '@/ai/flows/chat-with-report-flow';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -27,8 +27,15 @@ export function ReportChatbot({ executiveSummaryText, isReportLoading }: ReportC
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [isBotTyping, setIsBotTyping] = useState(false);
   const { toast } = useToast();
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  
+  // Speech Synthesis
+  const speechSynthRef = useRef<SpeechSynthesis | null>(null);
+  const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+  const [isChatbotSpeaking, setIsChatbotSpeaking] = useState(false);
+  const [enableVoiceOutput, setEnableVoiceOutput] = useState(true);
 
+  // Speech Recognition
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [browserSupportsSpeechRecognition, setBrowserSupportsSpeechRecognition] = useState(true);
@@ -36,7 +43,9 @@ export function ReportChatbot({ executiveSummaryText, isReportLoading }: ReportC
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      speechSynthRef.current = window.speechSynthesis;
+      
+      const SpeechRecognitionAPI = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognitionAPI) {
         setBrowserSupportsSpeechRecognition(false);
         console.warn('Speech Recognition API is not supported in this browser.');
@@ -44,12 +53,13 @@ export function ReportChatbot({ executiveSummaryText, isReportLoading }: ReportC
       }
 
       const recogInstance = new SpeechRecognitionAPI();
-      recogInstance.continuous = false;
-      recogInstance.interimResults = true;
+      recogInstance.continuous = false; // Listen for a single utterance
+      recogInstance.interimResults = true; // Get results as user speaks
       recogInstance.lang = 'en-US';
 
       recogInstance.onstart = () => {
         setIsListening(true);
+        cancelSpeech(); // Stop bot speaking when user starts talking
       };
 
       recogInstance.onresult = (event: SpeechRecognitionEvent) => {
@@ -63,10 +73,10 @@ export function ReportChatbot({ executiveSummaryText, isReportLoading }: ReportC
           }
         }
         setCurrentQuestion(finalTranscript || interimTranscript);
-        if (finalTranscript) {
-          // Optional: auto-submit if final transcript is received
-          // handleSubmitFormWithText(finalTranscript);
-        }
+        // Optionally auto-submit if final transcript is received and user pauses
+        // if (finalTranscript) {
+        //   handleSubmitFormWithText(finalTranscript);
+        // }
       };
 
       recogInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -90,7 +100,7 @@ export function ReportChatbot({ executiveSummaryText, isReportLoading }: ReportC
       recogInstance.onend = () => {
         setIsListening(false);
       };
-
+      
       setRecognition(recogInstance);
 
       return () => {
@@ -101,177 +111,212 @@ export function ReportChatbot({ executiveSummaryText, isReportLoading }: ReportC
           recogInstance.onerror = null;
           recogInstance.onend = null;
         }
+        cancelSpeech(); // Ensure speech is cancelled on unmount
       };
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toast]);
+
+  const speakText = useCallback((text: string) => {
+    if (!speechSynthRef.current || !enableVoiceOutput) return;
+
+    cancelSpeech(); // Cancel any ongoing speech
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onstart = () => setIsChatbotSpeaking(true);
+    utterance.onend = () => setIsChatbotSpeaking(false);
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event.error);
+      setIsChatbotSpeaking(false);
+      toast({ title: 'Speech Error', description: 'Could not read the response aloud.', variant: 'destructive' });
+    };
+    setCurrentUtterance(utterance);
+    speechSynthRef.current.speak(utterance);
+  }, [enableVoiceOutput, toast]);
+
+  const cancelSpeech = useCallback(() => {
+    if (speechSynthRef.current && speechSynthRef.current.speaking) {
+      speechSynthRef.current.cancel();
+    }
+    setIsChatbotSpeaking(false);
+    setCurrentUtterance(null);
   }, []);
 
-  const scrollToBottom = () => {
-    if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
+  const toggleVoiceOutput = () => {
+    setEnableVoiceOutput(prev => {
+      if (!prev) { // if turning on
+        // If there was a last message from bot, speak it.
+        const lastBotMessage = chatHistory.filter(m => m.type === 'bot').pop();
+        if(lastBotMessage) speakText(lastBotMessage.text);
+      } else { // if turning off
+        cancelSpeech();
       }
-    }
+      return !prev;
+    });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
   }, [chatHistory]);
   
-  useEffect(() => {
-    setChatHistory([]);
-  }, [executiveSummaryText]);
+  const handleSubmitFormWithText = async (questionText: string) => {
+    if (!questionText.trim() || !executiveSummaryText) {
+      if (!executiveSummaryText) {
+        toast({ title: 'No Report', description: 'Please generate a report first.', variant: 'destructive'});
+      }
+      return;
+    }
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setCurrentQuestion(e.target.value);
-  };
-
-  const handleSubmitFormWithText = async (text: string) => {
-     if (!text.trim() || !executiveSummaryText) return;
-
-    const userMessage: ChatMessage = { id: Date.now().toString(), type: 'user', text };
-    setChatHistory((prev) => [...prev, userMessage]);
-    setCurrentQuestion(''); // Clear input after sending
+    const newUserMessage: ChatMessage = { id: Date.now().toString(), type: 'user', text: questionText };
+    setChatHistory(prev => [...prev, newUserMessage]);
+    setCurrentQuestion('');
     setIsBotTyping(true);
 
     try {
       const input: ChatWithReportInput = {
         reportContext: executiveSummaryText,
-        userQuestion: userMessage.text,
+        userQuestion: questionText,
       };
       const response = await chatWithReport(input);
-      const botMessage: ChatMessage = { id: (Date.now() + 1).toString(), type: 'bot', text: response.botResponse };
-      setChatHistory((prev) => [...prev, botMessage]);
+      const botResponse: ChatMessage = { id: (Date.now() + 1).toString(), type: 'bot', text: response.botResponse };
+      setChatHistory(prev => [...prev, botResponse]);
+      if (enableVoiceOutput) {
+        speakText(response.botResponse);
+      }
     } catch (error) {
       console.error('Error chatting with report:', error);
-      const errorMessageText = error instanceof Error ? error.message : 'An unknown error occurred with the chatbot.';
-      toast({
-        variant: 'destructive',
-        title: 'Chatbot Error',
-        description: errorMessageText,
-      });
-      const errorBotMessage: ChatMessage = {
+      const errorMessageText = error instanceof Error ? error.message : 'An unexpected error occurred.';
+      const errorResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        text: "Sorry, I encountered an error. Please try again."
+        text: `Sorry, I encountered an error: ${errorMessageText}`,
       };
-      setChatHistory((prev) => [...prev, errorBotMessage]);
+      setChatHistory(prev => [...prev, errorResponse]);
+      toast({ variant: 'destructive', title: 'Chat Error', description: errorMessageText });
     } finally {
       setIsBotTyping(false);
     }
-  }
+  };
+
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleSubmitFormWithText(currentQuestion);
   };
-  
-  const handleToggleListening = () => {
-    if (!browserSupportsSpeechRecognition) {
-      toast({
-        variant: 'destructive',
-        title: 'Unsupported Feature',
-        description: 'Voice input is not supported by your browser.',
-      });
-      return;
-    }
-    if (recognition) {
-      if (isListening) {
-        recognition.stop();
-      } else {
-        setCurrentQuestion(''); // Clear current question before starting new recognition
-        recognition.start();
-      }
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setCurrentQuestion(e.target.value);
+  };
+
+  const toggleListening = () => {
+    if (!browserSupportsSpeechRecognition || !recognition) return;
+    if (isListening) {
+      recognition.stop();
+    } else {
+      recognition.start();
     }
   };
 
-  const isDisabled = isReportLoading || !executiveSummaryText;
+
+  const isChatDisabled = isReportLoading || !executiveSummaryText;
+
+  if (isReportLoading) {
+     return (
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-2 pt-3 px-4">
+          <CardTitle className="text-lg font-medium text-primary">Chat with Report</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+            <p>Report is generating... Chat will be available soon.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (!executiveSummaryText) {
+    return (
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-2 pt-3 px-4">
+          <CardTitle className="text-lg font-medium text-primary">Chat with Report</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <Bot className="h-12 w-12 mx-auto mb-2" />
+            <p>Generate a report to start chatting about its summary.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
 
   return (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center text-xl font-semibold text-primary">
-          <Bot className="mr-2 h-6 w-6 text-accent" />
-          Chat with Report
-        </CardTitle>
+    <Card className="h-full flex flex-col shadow-md">
+      <CardHeader className="pb-2 pt-3 px-4 flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-medium text-primary">Chat with Report</CardTitle>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleVoiceOutput}
+          title={enableVoiceOutput ? "Mute voice output" : "Enable voice output"}
+          className={cn(enableVoiceOutput ? "text-accent" : "text-muted-foreground")}
+          disabled={!speechSynthRef.current}
+        >
+          {enableVoiceOutput ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        </Button>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[300px] w-full pr-4 border rounded-md p-4" ref={scrollAreaRef}>
-          <div className="space-y-4">
-            {chatHistory.map((msg) => (
-              <div
-                key={msg.id}
-                className={cn(
-                  'flex items-start gap-3 p-3 rounded-lg max-w-[85%]',
-                  msg.type === 'user' ? 'ml-auto bg-primary text-primary-foreground' : 'mr-auto bg-muted text-muted-foreground'
-                )}
-              >
-                {msg.type === 'bot' && <Bot className="h-5 w-5 shrink-0 text-accent" />}
-                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                {msg.type === 'user' && <User className="h-5 w-5 shrink-0" />}
+      <CardContent className="flex-1 p-0 overflow-hidden">
+        <ScrollArea className="h-full p-4" ref={scrollAreaRef}>
+          {chatHistory.map(message => (
+            <div key={message.id} className={cn('mb-3 flex', message.type === 'user' ? 'justify-end' : 'justify-start')}>
+              <div className={cn('p-2 rounded-lg max-w-[80%] flex items-start gap-2', message.type === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
+                {message.type === 'bot' && <Bot className="h-5 w-5 mt-0.5 shrink-0" />}
+                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                {message.type === 'user' && <User className="h-5 w-5 mt-0.5 shrink-0" />}
               </div>
-            ))}
-            {isBotTyping && (
-              <div className="flex items-start gap-3 p-3 rounded-lg mr-auto bg-muted text-muted-foreground max-w-[85%]">
-                <Bot className="h-5 w-5 shrink-0 text-accent" />
-                <div className="flex items-center space-x-1">
-                  <span className="text-sm">Typing</span>
-                  <Loader2 className="h-4 w-4 animate-spin text-accent" />
-                </div>
+            </div>
+          ))}
+          {isBotTyping && (
+            <div className="mb-3 flex justify-start">
+              <div className="p-2 rounded-lg bg-muted text-muted-foreground flex items-center gap-2">
+                <Bot className="h-5 w-5" />
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm italic">AI is typing...</span>
               </div>
-            )}
-             {isListening && (
-              <div className="flex items-start gap-3 p-3 rounded-lg mr-auto bg-muted text-muted-foreground max-w-[85%]">
-                <Mic className="h-5 w-5 shrink-0 text-accent animate-pulse" />
-                <div className="flex items-center space-x-1">
-                  <span className="text-sm">Listening...</span>
-                </div>
-              </div>
-            )}
-            {!executiveSummaryText && !isReportLoading && (
-              <div className="text-center text-muted-foreground py-8">
-                <p>Please generate a report first to enable chat.</p>
-              </div>
-            )}
-             {chatHistory.length === 0 && executiveSummaryText && !isListening && (
-              <div className="text-center text-muted-foreground py-8">
-                <p>Ask questions about the executive summary above.</p>
-                <p className="text-xs mt-1">For example: "What are the key risks?" or "Summarize the market analysis."</p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </ScrollArea>
       </CardContent>
-      <CardFooter>
-        <form onSubmit={handleSubmit} className="flex w-full items-center space-x-2">
-          <Input
-            type="text"
-            placeholder={
-              isDisabled ? "Generate report to chat..." 
-              : isListening ? "Listening..." 
-              : "Ask a question or use mic..."
-            }
-            value={currentQuestion}
-            onChange={handleInputChange}
-            disabled={isBotTyping || isDisabled || isListening}
-            className="flex-1"
-          />
+      <CardFooter className="p-3 border-t">
+        <form onSubmit={handleSubmit} className="w-full flex items-center gap-2">
           {browserSupportsSpeechRecognition && (
-            <Button 
-              type="button" 
-              size="icon" 
-              variant={isListening ? "destructive" : "outline"}
-              onClick={handleToggleListening} 
-              disabled={isBotTyping || isDisabled}
-              aria-label={isListening ? "Stop listening" : "Start listening"}
-            >
-              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+             <Button 
+                type="button" 
+                variant="outline" 
+                size="icon" 
+                onClick={toggleListening}
+                title={isListening ? "Stop listening" : "Start voice input"}
+                className={cn(isListening && "bg-destructive text-destructive-foreground hover:bg-destructive/90")}
+                disabled={isChatDisabled || !recognition}
+              >
+              {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </Button>
           )}
-          <Button type="submit" size="icon" disabled={isBotTyping || isDisabled || !currentQuestion.trim() || isListening} className="bg-accent hover:bg-accent/90">
-            {isBotTyping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            <span className="sr-only">Send message</span>
+          <Input
+            type="text"
+            placeholder={isChatDisabled ? "Generate a report first..." : "Ask about the report..."}
+            value={currentQuestion}
+            onChange={handleInputChange}
+            disabled={isBotTyping || isChatDisabled}
+            className="flex-1"
+          />
+          <Button type="submit" size="icon" disabled={isBotTyping || !currentQuestion.trim() || isChatDisabled}>
+            <Send className="h-5 w-5" />
           </Button>
         </form>
       </CardFooter>
