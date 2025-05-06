@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -38,18 +39,32 @@ export function ReportSection({ title, isLoading, children, className, icon }: R
 }
 
 // Helper function to format data for display
-export function DataDisplay({ label, value, unit, citationNumber }: { label: string; value: string | number | undefined | null; unit?: string; citationNumber?: number }) {
+export function DataDisplay({ 
+  label, 
+  value, 
+  unit, 
+  citationNumber,
+  icon 
+}: { 
+  label: string; 
+  value: string | number | undefined | null; 
+  unit?: string; 
+  citationNumber?: number;
+  icon?: ReactNode;
+}) {
   if (value === undefined || value === null || value === '') {
     return (
-      <p className="text-sm text-muted-foreground">
-        {label}: Not available
+      <p className="text-sm text-muted-foreground flex items-center">
+        {icon}
+        <span className={cn(icon ? "ml-1" : "")}>{label}: Not available</span>
       </p>
     );
   }
   return (
-    <div className="mb-2">
-      <span className="font-medium text-foreground">{label}: </span>
-      <span className="text-muted-foreground">
+    <div className="mb-2 flex items-center">
+      {icon}
+      <span className={cn("font-medium text-foreground", icon ? "ml-1" : "")}>{label}: </span>
+      <span className="text-muted-foreground ml-1">
         {typeof value === 'number' && !isNaN(value) ? value.toLocaleString() : value}
         {unit && ` ${unit}`}
         {citationNumber && <sup className="text-accent ml-1">[{citationNumber}]</sup>}

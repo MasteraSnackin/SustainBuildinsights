@@ -29,10 +29,12 @@ import {
   getConservationAreas, getSchools, getCrimeRates, getDemographics,
   getStampDuty, getRentEstimates, getSoldPricesFloorArea, getRentalComparables,
   getEpcData, getFloodRiskData, getAirQualityData, getHistoricalClimateData, getTransportLinks,
+  getAdministrativeBoundaries, // Added
   type AskingPrice, type SoldPrice, type PriceTrends as PriceTrendData, type PlanningApplication,
   type ConservationArea, type School, type CrimeRates as CrimeRatesData, type Demographics as DemographicsData,
   type StampDuty as StampDutyData, type RentEstimates as RentEstimatesData, type SoldPricesFloorArea as SoldPricesFloorAreaData, type RentalComparables as RentalComparablesData,
-  type EpcData as EpcApiData, type FloodRiskData as FloodRiskApiData, type AirQualityData as AirQualityApiData, type HistoricalClimateData as HistoricalClimateApiData, type TransportLink
+  type EpcData as EpcApiData, type FloodRiskData as FloodRiskApiData, type AirQualityData as AirQualityApiData, type HistoricalClimateData as HistoricalClimateApiData, type TransportLink,
+  type AdministrativeBoundaries // Added
 } from '@/services/patma';
 import { generateExecutiveSummary, type GenerateExecutiveSummaryInput, type GenerateExecutiveSummaryOutput } from '@/ai/flows/generate-executive-summary';
 
@@ -68,6 +70,7 @@ export function PropertyInsightsDashboard() {
   const [airQualityData, setAirQualityData] = useState<AirQualityApiData | null>(null);
   const [historicalClimateData, setHistoricalClimateData] = useState<HistoricalClimateApiData | null>(null);
   const [transportLinks, setTransportLinks] = useState<TransportLink[] | null>(null);
+  const [administrativeBoundaries, setAdministrativeBoundaries] = useState<AdministrativeBoundaries | null>(null); // Added
 
   const [submittedPostcode, setSubmittedPostcode] = useState<string | null>(null);
   const [submittedPropertyPrice, setSubmittedPropertyPrice] = useState<number | undefined>(undefined);
@@ -92,12 +95,8 @@ export function PropertyInsightsDashboard() {
     setIsLoading(true);
     setApiError(null);
     setSubmittedPostcode(data.postcode);
-    // Property price is no longer directly asked in the form for the AI summary,
-    // but financial feasibility might still use it. For now, we'll set a mock price or handle it internally.
-    // Let's set a default mock price for now if it's needed by stamp duty etc.
-    const mockPropertyPrice = 500000; // Example, adjust if needed
+    const mockPropertyPrice = 500000; 
     setSubmittedPropertyPrice(mockPropertyPrice);
-
 
     localStorage.setItem('patmaApiKey', data.apiKey);
     
@@ -117,7 +116,8 @@ export function PropertyInsightsDashboard() {
         askingPricesData, soldPricesData, priceTrendsData, planningApplicationsData,
         conservationAreasData, schoolsData, crimeRatesData, demographicsData,
         stampDutyData, rentEstimatesData, soldPricesFloorAreaData, rentalComparablesData,
-        epcApiData, floodRiskApiData, airQualityApiData, historicalClimateApiData, transportLinksData
+        epcApiData, floodRiskApiDataResult, airQualityApiData, historicalClimateApiData, transportLinksData,
+        adminBoundariesData // Added
       ] = await Promise.all([
         fetchDataWithRateLimit(() => getAskingPrices(data.postcode)),
         fetchDataWithRateLimit(() => getSoldPrices(data.postcode)),
@@ -127,7 +127,7 @@ export function PropertyInsightsDashboard() {
         fetchDataWithRateLimit(() => getSchools(data.postcode)),
         fetchDataWithRateLimit(() => getCrimeRates(data.postcode)),
         fetchDataWithRateLimit(() => getDemographics(data.postcode)),
-        fetchDataWithRateLimit(() => getStampDuty(mockPropertyPrice)), // Using mock price
+        fetchDataWithRateLimit(() => getStampDuty(mockPropertyPrice)), 
         fetchDataWithRateLimit(() => getRentEstimates(data.postcode)),
         fetchDataWithRateLimit(() => getSoldPricesFloorArea(data.postcode)),
         fetchDataWithRateLimit(() => getRentalComparables(data.postcode)),
@@ -136,6 +136,7 @@ export function PropertyInsightsDashboard() {
         fetchDataWithRateLimit(() => getAirQualityData(data.postcode)),
         fetchDataWithRateLimit(() => getHistoricalClimateData(data.postcode)),
         fetchDataWithRateLimit(() => getTransportLinks(data.postcode)),
+        fetchDataWithRateLimit(() => getAdministrativeBoundaries(data.postcode)) // Added
       ]);
 
       setAskingPrices(askingPricesData);
@@ -151,10 +152,11 @@ export function PropertyInsightsDashboard() {
       setSoldPricesFloorArea(soldPricesFloorAreaData);
       setRentalComparables(rentalComparablesData);
       setEpcData(epcApiData);
-      setFloodRiskData(floodRiskApiData);
+      setFloodRiskData(floodRiskApiDataResult);
       setAirQualityData(airQualityApiData);
       setHistoricalClimateData(historicalClimateApiData);
       setTransportLinks(transportLinksData);
+      setAdministrativeBoundaries(adminBoundariesData); // Added
       
       const executiveSummaryInput: GenerateExecutiveSummaryInput = {
         postcode: data.postcode,
@@ -177,7 +179,7 @@ export function PropertyInsightsDashboard() {
     }
   };
   
-  const isAnyDataAvailable = executiveSummary || askingPrices || soldPrices || priceTrends || planningApplications || conservationAreas || schools || crimeRates || demographics || stampDuty || rentEstimates || soldPricesFloorArea || rentalComparables || epcData || floodRiskData || airQualityData || historicalClimateData || transportLinks;
+  const isAnyDataAvailable = executiveSummary || askingPrices || soldPrices || priceTrends || planningApplications || conservationAreas || schools || crimeRates || demographics || stampDuty || rentEstimates || soldPricesFloorArea || rentalComparables || epcData || floodRiskData || airQualityData || historicalClimateData || transportLinks || administrativeBoundaries;
 
 
   return (
@@ -217,7 +219,7 @@ export function PropertyInsightsDashboard() {
             Generate Report
           </Button>
            <p className="text-xs text-muted-foreground mt-2">
-            PaTMa API calls are subject to rate limits (typically 10 calls/minute) and credit costs (£0.002–£0.008 per call). Data freshness depends on PaTMa's last_updated fields. Free tier APIs for Energy/Climate/Transport may have their own rate limits.
+            PaTMa API calls are subject to rate limits (typically 10 calls/minute) and credit costs (£0.002–£0.008 per call). Data freshness depends on PaTMa's last_updated fields. Free tier APIs for Energy/Climate/Transport/MapIt may have their own rate limits. Mapbox static images API may require an access token.
           </p>
         </form>
       </Form>
@@ -242,7 +244,13 @@ export function PropertyInsightsDashboard() {
         <div className="space-y-8">
           <ExecutiveSummary summaryData={executiveSummary} isLoading={isLoading && !executiveSummary} />
           <ReportChatbot executiveSummaryText={executiveSummary?.summary ?? null} isReportLoading={isLoading && !executiveSummary} />
-          <MapLocation postcode={submittedPostcode} isLoading={isLoading && !submittedPostcode} />
+          <MapLocation 
+            postcode={submittedPostcode} 
+            administrativeBoundaries={administrativeBoundaries}
+            conservationAreas={conservationAreas}
+            floodRiskData={floodRiskData}
+            isLoading={isLoading && (!submittedPostcode || !administrativeBoundaries)} 
+          />
           <ValuationMarketAnalysis
             askingPrices={askingPrices}
             soldPrices={soldPrices}

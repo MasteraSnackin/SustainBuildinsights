@@ -563,3 +563,70 @@ export async function getTransportLinks(postcode: string): Promise<TransportLink
     { type: "Motorway Access", name: "M0 J5", distanceMiles: 3.5 },
   ];
 }
+
+/**
+ * Represents administrative boundary information for a postcode.
+ */
+export interface AdministrativeBoundaries {
+  latitude: number;
+  longitude: number;
+  localAuthority: string;
+  council: string;
+  constituency: string;
+  ward: string;
+  country: string;
+}
+
+/**
+ * Retrieves administrative boundaries for a given postcode using a service like MapIt.
+ * @param postcode The postcode to search for.
+ * @returns A promise that resolves to AdministrativeBoundaries or null if not found.
+ */
+export async function getAdministrativeBoundaries(postcode: string): Promise<AdministrativeBoundaries | null> {
+  // TODO: Implement by calling an API like MapIt (https://mapit.mysociety.org/docs/)
+  // Mock data for now based on common UK postcodes
+  const normalizedPostcode = postcode.toUpperCase().replace(/\s+/g, '');
+
+  if (normalizedPostcode === 'SW1A1AA') { // Buckingham Palace
+    return {
+      latitude: 51.5014,
+      longitude: -0.1419,
+      localAuthority: 'Westminster City Council',
+      council: 'Westminster City Council',
+      constituency: 'Cities of London and Westminster',
+      ward: 'St James\'s',
+      country: 'England',
+    };
+  } else if (normalizedPostcode === 'M11AE') { // Manchester Piccadilly
+    return {
+      latitude: 53.4765,
+      longitude: -2.2309,
+      localAuthority: 'Manchester City Council',
+      council: 'Manchester City Council',
+      constituency: 'Manchester Central',
+      ward: 'Piccadilly',
+      country: 'England',
+    };
+  } else if (normalizedPostcode.startsWith('EH1')) { // Edinburgh Old Town (example)
+     return {
+      latitude: 55.9500,
+      longitude: -3.1890,
+      localAuthority: 'City of Edinburgh Council',
+      council: 'City of Edinburgh Council',
+      constituency: 'Edinburgh North and Leith',
+      ward: 'City Centre',
+      country: 'Scotland',
+    };
+  }
+
+  // Fallback generic data
+  return {
+    latitude: 52.4797 + (Math.random() * 0.1 - 0.05), // Generic UK-ish coords
+    longitude: -1.90269 + (Math.random() * 0.1 - 0.05),
+    localAuthority: 'Generic District Council',
+    council: 'Generic County Council',
+    constituency: 'Generic Constituency',
+    ward: 'Generic Ward',
+    country: 'United Kingdom (Mock)',
+  };
+}
