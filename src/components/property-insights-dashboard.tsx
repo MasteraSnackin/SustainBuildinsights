@@ -20,8 +20,7 @@ import { CaseStudies } from './property-insights/case-studies';
 import { EnergyClimateEnvironment } from './property-insights/energy-climate-environment';
 import { TransportLinks } from './property-insights/transport-links';
 import { MapLocation } from './property-insights/map-location';
-import { ReportChatbot } from './property-insights/report-chatbot';
-
+// ReportChatbot removed from here
 
 import {
   getAskingPrices, getSoldPrices, getPriceTrends, getPlanningApplications,
@@ -44,7 +43,13 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function PropertyInsightsDashboard() {
+interface PropertyInsightsDashboardProps {
+  onSummaryGenerated: (summary: string | null) => void;
+  onLoadingChange: (loading: boolean) => void;
+  onReportDataFetched: (data: { executiveSummary: GenerateExecutiveSummaryOutput | null, submittedPostcode: string | null }) => void;
+}
+
+export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange, onReportDataFetched }: PropertyInsightsDashboardProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -89,6 +94,22 @@ export function PropertyInsightsDashboard() {
       form.setValue('apiKey', storedApiKey);
     }
   }, [form]);
+
+  useEffect(() => {
+    onLoadingChange(isLoading);
+  }, [isLoading, onLoadingChange]);
+
+  useEffect(() => {
+    onSummaryGenerated(executiveSummary?.summary ?? null);
+  }, [executiveSummary, onSummaryGenerated]);
+
+  useEffect(() => {
+    if(isAnyDataAvailable) {
+        onReportDataFetched({ executiveSummary, submittedPostcode });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [executiveSummary, submittedPostcode]); // Only trigger when these specific states change
+
 
   const handleGenerateReport: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true);
@@ -173,6 +194,8 @@ export function PropertyInsightsDashboard() {
         title: 'Error',
         description: `Failed to generate report. ${errorMessage}`,
       });
+      // Reset summary if error occurs
+      setExecutiveSummary(null); 
     } finally {
       setIsLoading(false);
     }
@@ -240,14 +263,7 @@ export function PropertyInsightsDashboard() {
 
 
       {isAnyDataAvailable && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <ReportChatbot 
-              executiveSummaryText={executiveSummary?.summary ?? null} 
-              isReportLoading={isLoading && !executiveSummary} 
-            />
-          </div>
-          <div className="lg:col-span-2 space-y-8">
+        <div className="space-y-8"> {/* Removed lg:grid and lg:col-span-2 for main content */}
             <ExecutiveSummary summaryData={executiveSummary} isLoading={isLoading && !executiveSummary} />
             <MapLocation 
               postcode={submittedPostcode} 
@@ -295,7 +311,6 @@ export function PropertyInsightsDashboard() {
               rentalComparables={rentalComparables}
               isLoading={isLoading && (!soldPricesFloorArea || !rentalComparables)}
             />
-          </div>
         </div>
       )}
       
@@ -309,3 +324,4 @@ export function PropertyInsightsDashboard() {
     </div>
   );
 }
+
