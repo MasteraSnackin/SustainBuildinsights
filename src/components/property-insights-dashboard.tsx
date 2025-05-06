@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -32,7 +31,7 @@ import {
   type ConservationArea, type School, type CrimeRates as CrimeRatesData, type Demographics as DemographicsData,
   type StampDuty as StampDutyData, type RentEstimates as RentEstimatesData, type SoldPricesFloorArea as SoldPricesFloorAreaData, type RentalComparables as RentalComparablesData,
   type EpcData as EpcApiData, type FloodRiskData as FloodRiskApiData, type AirQualityData as AirQualityApiData, type HistoricalClimateData as HistoricalClimateApiData, type TransportLink,
-  type AdministrativeBoundaries, type TreeCoverageData as TreeCoverageApiData, type SoilTypeData as SoilTypeApiData, type WaterSourceData as WaterSourceApiData, type IndustrialActivityData as IndustrialActivityApiData,
+  type AdministrativeBoundaries as AdminBoundariesData, type TreeCoverageData as TreeCoverageApiData, type SoilTypeData as SoilTypeApiData, type WaterSourceData as WaterSourceApiData, type IndustrialActivityData as IndustrialActivityApiData,
 } from '@/services/patma';
 import { generateExecutiveSummary, type GenerateExecutiveSummaryInput, type GenerateExecutiveSummaryOutput } from '@/ai/flows/generate-executive-summary';
 
@@ -73,7 +72,7 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
   const [airQualityData, setAirQualityData] = useState<AirQualityApiData | null>(null);
   const [historicalClimateData, setHistoricalClimateData] = useState<HistoricalClimateApiData | null>(null);
   const [transportLinks, setTransportLinks] = useState<TransportLink[] | null>(null);
-  const [administrativeBoundaries, setAdministrativeBoundaries] = useState<AdministrativeBoundaries | null>(null);
+  const [administrativeBoundaries, setAdministrativeBoundaries] = useState<AdminBoundariesData | null>(null);
   const [treeCoverageData, setTreeCoverageData] = useState<TreeCoverageApiData | null>(null);
   const [soilTypeData, setSoilTypeData] = useState<SoilTypeApiData | null>(null);
   const [waterSourceData, setWaterSourceData] = useState<WaterSourceApiData | null>(null);
@@ -112,14 +111,14 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
     setIsLoading(true);
     setApiError(null);
     setSubmittedPostcode(data.postcode);
-    const mockPropertyPrice = 500000; 
-    setSubmittedPropertyPrice(mockPropertyPrice);
+    const mockPropertyPriceForStampDuty = 500000; // This price is used for stamp duty calculation.
+    setSubmittedPropertyPrice(mockPropertyPriceForStampDuty);
 
     
     try {
       const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
       let callCount = 0;
-      const maxCallsPerMinute = 10; 
+      const maxCallsPerMinute = 20; // Increased slightly as we have more calls
       const callInterval = 60000 / maxCallsPerMinute; 
 
       const fetchDataWithRateLimit = async <T>(fetchFn: () => Promise<T>): Promise<T> => {
@@ -128,12 +127,13 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
         return fetchFn();
       };
       
+      // Fetch all data
       const [
         askingPricesData, soldPricesData, priceTrendsData, planningApplicationsData,
         conservationAreasData, schoolsData, crimeRatesData, demographicsData,
         stampDutyData, rentEstimatesData, soldPricesFloorAreaData, rentalComparablesData,
-        epcApiData, floodRiskApiDataResult, airQualityApiData, historicalClimateApiData, transportLinksData,
-        adminBoundariesData, treeCoverageApiData, soilTypeApiData, waterSourceApiData, industrialActivityApiData
+        epcApiData, floodRiskApiDataResult, airQualityApiDataResult, historicalClimateApiDataResult, transportLinksData,
+        adminBoundariesDataResult, treeCoverageApiDataResult, soilTypeApiDataResult, waterSourceApiDataResult, industrialActivityApiDataResult
       ] = await Promise.all([
         fetchDataWithRateLimit(() => getAskingPrices(data.postcode)),
         fetchDataWithRateLimit(() => getSoldPrices(data.postcode)),
@@ -143,7 +143,7 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
         fetchDataWithRateLimit(() => getSchools(data.postcode)),
         fetchDataWithRateLimit(() => getCrimeRates(data.postcode)),
         fetchDataWithRateLimit(() => getDemographics(data.postcode)),
-        fetchDataWithRateLimit(() => getStampDuty(mockPropertyPrice)), 
+        fetchDataWithRateLimit(() => getStampDuty(mockPropertyPriceForStampDuty)), 
         fetchDataWithRateLimit(() => getRentEstimates(data.postcode)),
         fetchDataWithRateLimit(() => getSoldPricesFloorArea(data.postcode)),
         fetchDataWithRateLimit(() => getRentalComparables(data.postcode)),
@@ -173,17 +173,40 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
       setRentalComparables(rentalComparablesData);
       setEpcData(epcApiData);
       setFloodRiskData(floodRiskApiDataResult);
-      setAirQualityData(airQualityApiData);
-      setHistoricalClimateData(historicalClimateApiData);
+      setAirQualityData(airQualityApiDataResult);
+      setHistoricalClimateData(historicalClimateApiDataResult);
       setTransportLinks(transportLinksData);
-      setAdministrativeBoundaries(adminBoundariesData);
-      setTreeCoverageData(treeCoverageApiData);
-      setSoilTypeData(soilTypeApiData);
-      setWaterSourceData(waterSourceApiData);
-      setIndustrialActivityData(industrialActivityApiData);
+      setAdministrativeBoundaries(adminBoundariesDataResult);
+      setTreeCoverageData(treeCoverageApiDataResult);
+      setSoilTypeData(soilTypeApiDataResult);
+      setWaterSourceData(waterSourceApiDataResult);
+      setIndustrialActivityData(industrialActivityApiDataResult);
       
+      // Prepare comprehensive input for executive summary
       const executiveSummaryInput: GenerateExecutiveSummaryInput = {
         postcode: data.postcode,
+        askingPrices: askingPricesData,
+        soldPrices: soldPricesData,
+        priceTrends: priceTrendsData,
+        planningApplications: planningApplicationsData,
+        conservationAreas: conservationAreasData,
+        schools: schoolsData,
+        crimeRates: crimeRatesData,
+        demographics: demographicsData,
+        stampDuty: stampDutyData,
+        rentEstimates: rentEstimatesData,
+        soldPricesFloorArea: soldPricesFloorAreaData,
+        rentalComparables: rentalComparablesData,
+        epcData: epcApiData,
+        floodRiskData: floodRiskApiDataResult,
+        airQualityData: airQualityApiDataResult,
+        historicalClimateData: historicalClimateApiDataResult,
+        transportLinks: transportLinksData,
+        administrativeBoundaries: adminBoundariesDataResult,
+        treeCoverageData: treeCoverageApiDataResult,
+        soilTypeData: soilTypeApiDataResult,
+        waterSourceData: waterSourceApiDataResult,
+        industrialActivityData: industrialActivityApiDataResult,
       };
       const summaryOutput = await generateExecutiveSummary(executiveSummaryInput);
       setExecutiveSummary(summaryOutput);
