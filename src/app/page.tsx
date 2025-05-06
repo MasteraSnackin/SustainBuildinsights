@@ -1,4 +1,3 @@
-
 import { PropertyInsightsDashboard } from '@/components/property-insights-dashboard';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,7 @@ export default function Home() {
         <SidebarContent className="p-2 group-data-[collapsible=icon]:p-0">
            <div className="p-2 group-data-[collapsible=icon]:hidden">
             <p className="text-xs text-sidebar-foreground/70">
-              Generate detailed property reports and chat with our AI assistant.
+              Generate detailed property reports.
             </p>
           </div>
         </SidebarContent>
@@ -35,7 +34,7 @@ export default function Home() {
           <h1 className="text-xl font-semibold text-foreground">Redevelopment Potential Report</h1>
         </header>
         <ScrollArea className="flex-1">
-          <main className="p-4 md:p-6 lg:p-8 max-w-none"> {/* Allow wider content */}
+          <main className="p-4 md:p-6 lg:p-8 lg:max-w-7xl xl:max-w-none"> {/* Adjusted max-width for better control */}
             <PropertyInsightsDashboard />
           </main>
         </ScrollArea>

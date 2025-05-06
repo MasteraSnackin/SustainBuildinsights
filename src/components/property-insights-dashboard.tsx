@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -29,12 +28,12 @@ import {
   getConservationAreas, getSchools, getCrimeRates, getDemographics,
   getStampDuty, getRentEstimates, getSoldPricesFloorArea, getRentalComparables,
   getEpcData, getFloodRiskData, getAirQualityData, getHistoricalClimateData, getTransportLinks,
-  getAdministrativeBoundaries, // Added
+  getAdministrativeBoundaries,
   type AskingPrice, type SoldPrice, type PriceTrends as PriceTrendData, type PlanningApplication,
   type ConservationArea, type School, type CrimeRates as CrimeRatesData, type Demographics as DemographicsData,
   type StampDuty as StampDutyData, type RentEstimates as RentEstimatesData, type SoldPricesFloorArea as SoldPricesFloorAreaData, type RentalComparables as RentalComparablesData,
   type EpcData as EpcApiData, type FloodRiskData as FloodRiskApiData, type AirQualityData as AirQualityApiData, type HistoricalClimateData as HistoricalClimateApiData, type TransportLink,
-  type AdministrativeBoundaries // Added
+  type AdministrativeBoundaries
 } from '@/services/patma';
 import { generateExecutiveSummary, type GenerateExecutiveSummaryInput, type GenerateExecutiveSummaryOutput } from '@/ai/flows/generate-executive-summary';
 
@@ -70,7 +69,7 @@ export function PropertyInsightsDashboard() {
   const [airQualityData, setAirQualityData] = useState<AirQualityApiData | null>(null);
   const [historicalClimateData, setHistoricalClimateData] = useState<HistoricalClimateApiData | null>(null);
   const [transportLinks, setTransportLinks] = useState<TransportLink[] | null>(null);
-  const [administrativeBoundaries, setAdministrativeBoundaries] = useState<AdministrativeBoundaries | null>(null); // Added
+  const [administrativeBoundaries, setAdministrativeBoundaries] = useState<AdministrativeBoundaries | null>(null);
 
   const [submittedPostcode, setSubmittedPostcode] = useState<string | null>(null);
   const [submittedPropertyPrice, setSubmittedPropertyPrice] = useState<number | undefined>(undefined);
@@ -117,7 +116,7 @@ export function PropertyInsightsDashboard() {
         conservationAreasData, schoolsData, crimeRatesData, demographicsData,
         stampDutyData, rentEstimatesData, soldPricesFloorAreaData, rentalComparablesData,
         epcApiData, floodRiskApiDataResult, airQualityApiData, historicalClimateApiData, transportLinksData,
-        adminBoundariesData // Added
+        adminBoundariesData
       ] = await Promise.all([
         fetchDataWithRateLimit(() => getAskingPrices(data.postcode)),
         fetchDataWithRateLimit(() => getSoldPrices(data.postcode)),
@@ -136,7 +135,7 @@ export function PropertyInsightsDashboard() {
         fetchDataWithRateLimit(() => getAirQualityData(data.postcode)),
         fetchDataWithRateLimit(() => getHistoricalClimateData(data.postcode)),
         fetchDataWithRateLimit(() => getTransportLinks(data.postcode)),
-        fetchDataWithRateLimit(() => getAdministrativeBoundaries(data.postcode)) // Added
+        fetchDataWithRateLimit(() => getAdministrativeBoundaries(data.postcode))
       ]);
 
       setAskingPrices(askingPricesData);
@@ -156,7 +155,7 @@ export function PropertyInsightsDashboard() {
       setAirQualityData(airQualityApiData);
       setHistoricalClimateData(historicalClimateApiData);
       setTransportLinks(transportLinksData);
-      setAdministrativeBoundaries(adminBoundariesData); // Added
+      setAdministrativeBoundaries(adminBoundariesData);
       
       const executiveSummaryInput: GenerateExecutiveSummaryInput = {
         postcode: data.postcode,
@@ -241,55 +240,62 @@ export function PropertyInsightsDashboard() {
 
 
       {isAnyDataAvailable && (
-        <div className="space-y-8">
-          <ExecutiveSummary summaryData={executiveSummary} isLoading={isLoading && !executiveSummary} />
-          <ReportChatbot executiveSummaryText={executiveSummary?.summary ?? null} isReportLoading={isLoading && !executiveSummary} />
-          <MapLocation 
-            postcode={submittedPostcode} 
-            administrativeBoundaries={administrativeBoundaries}
-            conservationAreas={conservationAreas}
-            floodRiskData={floodRiskData}
-            isLoading={isLoading && (!submittedPostcode || !administrativeBoundaries)} 
-          />
-          <ValuationMarketAnalysis
-            askingPrices={askingPrices}
-            soldPrices={soldPrices}
-            priceTrends={priceTrends}
-            isLoading={isLoading && (!askingPrices || !soldPrices || !priceTrends)}
-          />
-          <PlanningRegulatory
-            planningApplications={planningApplications}
-            conservationAreas={conservationAreas}
-            isLoading={isLoading && (!planningApplications || !conservationAreas)}
-          />
-          <NeighborhoodInsights
-            schools={schools}
-            crimeRates={crimeRates}
-            demographics={demographics}
-            isLoading={isLoading && (!schools || !crimeRates || !demographics)}
-          />
-          <EnergyClimateEnvironment
-            epcData={epcData}
-            floodRiskData={floodRiskData}
-            airQualityData={airQualityData}
-            historicalClimateData={historicalClimateData}
-            isLoading={isLoading && (!epcData || !floodRiskData || !airQualityData || !historicalClimateData)}
-          />
-           <TransportLinks
-            transportLinks={transportLinks}
-            isLoading={isLoading && !transportLinks}
-          />
-          <FinancialFeasibility
-            stampDuty={stampDuty}
-            rentEstimates={rentEstimates}
-            propertyPrice={submittedPropertyPrice} 
-            isLoading={isLoading && (!stampDuty || !rentEstimates)}
-          />
-          <CaseStudies
-            soldPricesFloorArea={soldPricesFloorArea}
-            rentalComparables={rentalComparables}
-            isLoading={isLoading && (!soldPricesFloorArea || !rentalComparables)}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <ReportChatbot 
+              executiveSummaryText={executiveSummary?.summary ?? null} 
+              isReportLoading={isLoading && !executiveSummary} 
+            />
+          </div>
+          <div className="lg:col-span-2 space-y-8">
+            <ExecutiveSummary summaryData={executiveSummary} isLoading={isLoading && !executiveSummary} />
+            <MapLocation 
+              postcode={submittedPostcode} 
+              administrativeBoundaries={administrativeBoundaries}
+              conservationAreas={conservationAreas}
+              floodRiskData={floodRiskData}
+              isLoading={isLoading && (!submittedPostcode || !administrativeBoundaries)} 
+            />
+            <ValuationMarketAnalysis
+              askingPrices={askingPrices}
+              soldPrices={soldPrices}
+              priceTrends={priceTrends}
+              isLoading={isLoading && (!askingPrices || !soldPrices || !priceTrends)}
+            />
+            <PlanningRegulatory
+              planningApplications={planningApplications}
+              conservationAreas={conservationAreas}
+              isLoading={isLoading && (!planningApplications || !conservationAreas)}
+            />
+            <NeighborhoodInsights
+              schools={schools}
+              crimeRates={crimeRates}
+              demographics={demographics}
+              isLoading={isLoading && (!schools || !crimeRates || !demographics)}
+            />
+            <EnergyClimateEnvironment
+              epcData={epcData}
+              floodRiskData={floodRiskData}
+              airQualityData={airQualityData}
+              historicalClimateData={historicalClimateData}
+              isLoading={isLoading && (!epcData || !floodRiskData || !airQualityData || !historicalClimateData)}
+            />
+            <TransportLinks
+              transportLinks={transportLinks}
+              isLoading={isLoading && !transportLinks}
+            />
+            <FinancialFeasibility
+              stampDuty={stampDuty}
+              rentEstimates={rentEstimates}
+              propertyPrice={submittedPropertyPrice} 
+              isLoading={isLoading && (!stampDuty || !rentEstimates)}
+            />
+            <CaseStudies
+              soldPricesFloorArea={soldPricesFloorArea}
+              rentalComparables={rentalComparables}
+              isLoading={isLoading && (!soldPricesFloorArea || !rentalComparables)}
+            />
+          </div>
         </div>
       )}
       
