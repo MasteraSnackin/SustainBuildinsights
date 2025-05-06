@@ -15,7 +15,8 @@ Property Insights Pro is a Next.js application designed to provide comprehensive
     - Identification of conservation areas.
     - Assessment of planning permission likelihood (qualitative).
 - **Location Overview:**
-    - Static map image of the postcode using Mapbox.
+    - Static map image of the postcode using Mapbox Static Images API.
+    - Option to use custom map styles from [Mapbox Studio](https://www.mapbox.com/mapbox-studio).
     - Administrative boundaries (Local Authority, Council, Constituency, Ward, Country).
     - Notable geographic features (e.g., conservation areas, flood zones).
 - **Neighborhood Insights:**
@@ -77,6 +78,7 @@ Property Insights Pro is a Next.js application designed to provide comprehensive
 - A PaTMa API Key (for actual data fetching, though the current service is mocked)
 - A Google AI API Key (for Genkit, configure in `.env` or your Google Cloud project)
 - A Mapbox Access Token (for displaying maps, configure in `.env.local`)
+- (Optional) A Mapbox Style ID if you want to use custom maps from [Mapbox Studio](https://www.mapbox.com/mapbox-studio).
 
 ### Environment Variables
 
@@ -87,11 +89,14 @@ Create a `.env` file in the root of the project and add your Google AI API key:
 GOOGLE_API_KEY=YOUR_GOOGLE_AI_API_KEY
 ```
 
-Create a `.env.local` file in the root of the project and add your Mapbox access token:
+Create a `.env.local` file in the root of the project and add your Mapbox access token and optionally, your Mapbox style ID:
 
 ```env.local
 # .env.local
 NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=YOUR_MAPBOX_ACCESS_TOKEN
+# Optional: Specify your custom Mapbox style ID from Mapbox Studio (e.g., yourusername/ckxxxxxxxxxxxxxxx)
+# If not set, it defaults to 'mapbox/streets-v12'
+# NEXT_PUBLIC_MAPBOX_STYLE_ID=yourusername/yourstyleid 
 ```
 
 **Note:** The PaTMa API key is currently entered directly in the UI. The application will store it in `localStorage` for convenience.
@@ -207,7 +212,10 @@ The Genkit AI client is initialized in `src/ai/genkit.ts`.
 
 ### Mapbox Static Images API
 
-The `src/components/property-insights/map-location.tsx` component uses the Mapbox Static Images API to display a map for the given postcode. An access token (`NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`) must be provided in `.env.local`. If the token is missing or invalid, a placeholder image is shown.
+The `src/components/property-insights/map-location.tsx` component uses the Mapbox Static Images API to display a map for the given postcode. 
+- An access token (`NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`) must be provided in `.env.local`. 
+- Optionally, a custom map style ID (`NEXT_PUBLIC_MAPBOX_STYLE_ID`) from [Mapbox Studio](https://www.mapbox.com/mapbox-studio) can be specified in `.env.local`. If not provided, it defaults to `mapbox/streets-v12`.
+If the access token is missing or invalid, a placeholder image is shown.
 
 ## Contributing
 

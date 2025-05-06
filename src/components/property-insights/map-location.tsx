@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -22,7 +21,8 @@ export function MapLocation({
   floodRiskData,
   isLoading 
 }: MapLocationProps) {
-  const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "YOUR_MAPBOX_ACCESS_TOKEN"; // Fallback, ideally set in .env.local
+  const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "YOUR_MAPBOX_ACCESS_TOKEN";
+  const MAPBOX_STYLE_ID = process.env.NEXT_PUBLIC_MAPBOX_STYLE_ID || "mapbox/streets-v12"; // Default to streets-v12
 
   const notableFeatures: string[] = [];
   if (conservationAreas && conservationAreas.length > 0) {
@@ -37,12 +37,12 @@ export function MapLocation({
     }
   }
   
-  const mapImageUrl = administrativeBoundaries 
-    ? `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${administrativeBoundaries.longitude},${administrativeBoundaries.latitude},15/600x400?access_token=${MAPBOX_ACCESS_TOKEN}`
-    : `https://picsum.photos/seed/map-placeholder-${postcode?.replace(/\s+/g, '') || 'default'}/800/400`; // Fallback placeholder
+  const mapImageUrl = administrativeBoundaries && MAPBOX_ACCESS_TOKEN !== "YOUR_MAPBOX_ACCESS_TOKEN"
+    ? `https://api.mapbox.com/styles/v1/${MAPBOX_STYLE_ID}/static/${administrativeBoundaries.longitude},${administrativeBoundaries.latitude},15/600x400?access_token=${MAPBOX_ACCESS_TOKEN}`
+    : `https://picsum.photos/seed/map-placeholder-${postcode?.replace(/\s+/g, '') || 'default'}/800/400`;
   
-  const mapImageAlt = administrativeBoundaries
-    ? `Map showing location for ${postcode}`
+  const mapImageAlt = administrativeBoundaries && MAPBOX_ACCESS_TOKEN !== "YOUR_MAPBOX_ACCESS_TOKEN"
+    ? `Map showing location for ${postcode} using style ${MAPBOX_STYLE_ID}`
     : `Placeholder map for ${postcode}`;
 
   return (
@@ -55,32 +55,25 @@ export function MapLocation({
                 Map of {postcode}
               </h3>
               <div className="aspect-[4/3] w-full overflow-hidden rounded-md border">
-                {MAPBOX_ACCESS_TOKEN === "YOUR_MAPBOX_ACCESS_TOKEN" && !administrativeBoundaries ? (
-                   <Image
-                    src={`https://picsum.photos/seed/map-placeholder-${postcode.replace(/\s+/g, '')}/800/600`}
-                    alt={`Placeholder map for ${postcode}`}
+                 <Image
+                    src={mapImageUrl}
+                    alt={mapImageAlt}
                     width={800}
                     height={600}
                     className="object-cover w-full h-full"
                     data-ai-hint="map location"
-                    priority={false}
+                    priority={false} 
+                    unoptimized={MAPBOX_ACCESS_TOKEN !== "YOUR_MAPBOX_ACCESS_TOKEN" && administrativeBoundaries !== null && !mapImageUrl.startsWith('https://picsum.photos')}
                   />
-                ) : (
-                  <Image
-                    src={mapImageUrl}
-                    alt={mapImageAlt}
-                    width={800}
-                    height={600} // Adjust if your map aspect ratio is different
-                    className="object-cover w-full h-full"
-                    data-ai-hint="map location"
-                    priority={false} // Not critical path for LCP
-                    unoptimized={MAPBOX_ACCESS_TOKEN !== "YOUR_MAPBOX_ACCESS_TOKEN" && administrativeBoundaries !== null} // Only unoptimize if using actual Mapbox URL
-                  />
-                )}
               </div>
               {MAPBOX_ACCESS_TOKEN === "YOUR_MAPBOX_ACCESS_TOKEN" && (
                  <p className="text-xs text-muted-foreground mt-2">
                   Note: This is a placeholder image. To display a real map, please set your <code>NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN</code> in <code>.env.local</code>.
+                </p>
+              )}
+               {process.env.NEXT_PUBLIC_MAPBOX_STYLE_ID && MAPBOX_ACCESS_TOKEN !== "YOUR_MAPBOX_ACCESS_TOKEN" && (
+                 <p className="text-xs text-muted-foreground mt-1">
+                  Using custom Mapbox style: <code>{process.env.NEXT_PUBLIC_MAPBOX_STYLE_ID}</code>.
                 </p>
               )}
             </div>
@@ -149,3 +142,4 @@ export function MapLocation({
     </ReportSection>
   );
 }
+
