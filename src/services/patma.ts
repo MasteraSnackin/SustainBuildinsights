@@ -379,3 +379,142 @@ export async function getRentalComparables(postcode: string): Promise<RentalComp
     { averageRent: 1750, propertyType: 'Semi-Detached', bedrooms: 3 },
   ];
 }
+
+
+/**
+ * Represents Energy Performance Certificate (EPC) data.
+ */
+export interface EpcData {
+  /** Current energy efficiency rating (e.g., "C") */
+  currentRating: string;
+  /** Potential energy efficiency rating (e.g., "B") */
+  potentialRating: string;
+  /** Current energy efficiency score (e.g., 70) */
+  currentScore: number;
+  /** Potential energy efficiency score (e.g., 85) */
+  potentialScore: number;
+  /** Date of the EPC assessment */
+  assessmentDate: string;
+  /** Link to the full EPC report if available */
+  reportUrl?: string;
+}
+
+/**
+ * Retrieves EPC data for a given postcode or property identifier.
+ * @param postcode The postcode to search for.
+ * @returns A promise that resolves to EpcData or null if not found.
+ */
+export async function getEpcData(postcode: string): Promise<EpcData | null> {
+  // TODO: Implement by calling a free EPC API (e.g., Open EPC Register if available and suitable)
+  // Mock data for now
+  const today = new Date();
+  const ratings = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+  const currentRating = ratings[Math.floor(Math.random() * ratings.length)];
+  const potentialRating = ratings[Math.max(0, ratings.indexOf(currentRating) - Math.floor(Math.random() * 2))]; // Potential is usually better or same
+
+  return {
+    currentRating,
+    potentialRating,
+    currentScore: Math.floor(Math.random() * 80) + 20, // Score between 20-100
+    potentialScore: Math.floor(Math.random() * (100 - (ratings.indexOf(potentialRating) * 10))) + (ratings.indexOf(potentialRating) * 10 + 5),
+    assessmentDate: new Date(today.getFullYear() - Math.floor(Math.random() * 5), today.getMonth(), today.getDate()).toISOString().split('T')[0],
+    reportUrl: `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(postcode)}` // Example link
+  };
+}
+
+/**
+ * Represents Flood Risk data.
+ */
+export interface FloodRiskData {
+  /** Risk level from rivers and sea (e.g., "Low", "Medium", "High", "Very Low") */
+  riversAndSea: string;
+  /** Risk level from surface water (e.g., "Low", "Medium", "High", "Very Low") */
+  surfaceWater: string;
+  /** Risk level from reservoirs (e.g., "Low", "Medium", "High", "Very Low") */
+  reservoirs?: string; // Optional, as not always available
+  /** Link to detailed flood risk map or report */
+  detailsUrl?: string;
+}
+
+/**
+ * Retrieves flood risk data for a given postcode.
+ * @param postcode The postcode to search for.
+ * @returns A promise that resolves to FloodRiskData or null if not found.
+ */
+export async function getFloodRiskData(postcode: string): Promise<FloodRiskData | null> {
+  // TODO: Implement by calling a free Flood Risk API (e.g., UK government APIs)
+  // Mock data for now
+  const riskLevels = ["Very Low", "Low", "Medium", "High"];
+  return {
+    riversAndSea: riskLevels[Math.floor(Math.random() * riskLevels.length)],
+    surfaceWater: riskLevels[Math.floor(Math.random() * riskLevels.length)],
+    reservoirs: riskLevels[Math.floor(Math.random() * riskLevels.length)],
+    detailsUrl: `https://check-long-term-flood-risk.service.gov.uk/postcode?postcode=${encodeURIComponent(postcode)}` // Example link
+  };
+}
+
+/**
+ * Represents Air Quality data.
+ */
+export interface AirQualityData {
+  /** Air Quality Index (AQI) value */
+  aqi: number;
+  /** Dominant pollutant (e.g., "PM2.5", "O3") */
+  dominantPollutant?: string;
+  /** General air quality category (e.g., "Good", "Moderate", "Unhealthy for Sensitive Groups") */
+  category: string;
+  /** Date of the reading */
+  lastUpdated: string;
+}
+
+/**
+ * Retrieves air quality data for a given postcode or coordinates.
+ * @param postcode The postcode to search for.
+ * @returns A promise that resolves to AirQualityData or null if not found.
+ */
+export async function getAirQualityData(postcode: string): Promise<AirQualityData | null> {
+  // TODO: Implement by calling a free Air Quality API (e.g., OpenAQ, World Air Quality Index project)
+  // Mock data for now
+  const today = new Date();
+  const aqiValue = Math.floor(Math.random() * 150) + 10; // AQI between 10-160
+  let category = "Good";
+  if (aqiValue > 50 && aqiValue <=100) category = "Moderate";
+  else if (aqiValue > 100) category = "Unhealthy for Sensitive Groups";
+
+  return {
+    aqi: aqiValue,
+    dominantPollutant: ["PM2.5", "O3", "NO2"][Math.floor(Math.random() * 3)],
+    category,
+    lastUpdated: today.toISOString()
+  };
+}
+
+/**
+ * Represents Historical Climate data.
+ */
+export interface HistoricalClimateData {
+  /** Average annual rainfall in mm */
+  averageAnnualRainfallMm: number;
+  /** Average annual mean temperature in Celsius */
+  averageAnnualMeanTempC: number;
+  /** Number of years data is based on */
+  dataYears?: number;
+  /** Source of the climate data */
+  source?: string;
+}
+
+/**
+ * Retrieves historical climate data for a given postcode or region.
+ * @param postcode The postcode to search for.
+ * @returns A promise that resolves to HistoricalClimateData or null if not found.
+ */
+export async function getHistoricalClimateData(postcode: string): Promise<HistoricalClimateData | null> {
+  // TODO: Implement by calling a free climate data API (e.g., Met Office for UK, or global sources)
+  // Mock data for now (general UK averages)
+  return {
+    averageAnnualRainfallMm: Math.floor(Math.random() * 400) + 800, // 800-1200mm
+    averageAnnualMeanTempC: parseFloat((Math.random() * 5 + 8).toFixed(1)), // 8.0-13.0°C
+    dataYears: 30,
+    source: "Mock Climate Data Service (General UK Averages)"
+  };
+}
