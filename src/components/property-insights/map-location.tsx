@@ -2,10 +2,11 @@
 'use client';
 
 import Image from 'next/image';
-import { MapPin, Landmark, Users, Flag } from 'lucide-react';
+import { MapPin, Landmark, Users, Flag, AlertTriangle } from 'lucide-react';
 import { ReportSection, DataDisplay } from './report-section';
 import { Card, CardContent } from '@/components/ui/card';
 import type { AdministrativeBoundaries, ConservationArea, FloodRiskData } from '@/services/patma';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface MapLocationProps {
   postcode: string | null;
@@ -14,6 +15,8 @@ interface MapLocationProps {
   floodRiskData: FloodRiskData | null;
   isLoading: boolean;
 }
+
+const MAPBOX_PLACEHOLDER_TOKEN = 'YOUR_MAPBOX_ACCESS_TOKEN_PLACEHOLDER';
 
 export function MapLocation({
   postcode,
@@ -35,11 +38,25 @@ export function MapLocation({
     }
   }
 
-  const placeholderMapImageUrl = `https://picsum.photos/seed/osm-placeholder-${postcode?.replace(/\s+/g, '') || 'default'}/800/400`;
-  const mapImageAlt = `Placeholder map for ${postcode}. OpenStreetMap data could be visualized here.`;
+  const mapboxAccessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || MAPBOX_PLACEHOLDER_TOKEN;
+  const showMapboxTokenWarning = mapboxAccessToken === MAPBOX_PLACEHOLDER_TOKEN;
+
+  let mapImageUrl: string;
+  let mapImageAlt: string;
+
+  if (administrativeBoundaries?.latitude && administrativeBoundaries?.longitude && mapboxAccessToken !== MAPBOX_PLACEHOLDER_TOKEN) {
+    const { longitude, latitude } = administrativeBoundaries;
+    // Mapbox Static Images API URL format
+    mapImageUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${longitude},${latitude},15/800x600?access_token=${mapboxAccessToken}`;
+    mapImageAlt = `Map of ${postcode} centered at ${latitude}, ${longitude}.`;
+  } else {
+    // Fallback to placeholder if coordinates or token are missing
+    mapImageUrl = `https://picsum.photos/seed/map-placeholder-${postcode?.replace(/\s+/g, '') || 'default'}/800/600`;
+    mapImageAlt = `Placeholder map for ${postcode}. Mapbox map could be displayed here if coordinates and access token are available.`;
+  }
 
   return (
-    <ReportSection title="Location Overview (OpenStreetMap Data Placeholder)" isLoading={isLoading} icon={<MapPin />}>
+    <ReportSection title="Location Overview (Mapbox Static Map)" isLoading={isLoading} icon={<MapPin />}>
       {postcode ? (
         <Card>
           <CardContent className="pt-6 space-y-4">
@@ -47,9 +64,18 @@ export function MapLocation({
               <h3 className="text-lg font-medium text-foreground mb-2">
                 Map of {postcode}
               </h3>
+              {showMapboxTokenWarning && (
+                 <Alert variant="destructive" className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    A Mapbox Access Token is not configured. Displaying a placeholder map. 
+                    Set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN in your .env.local file.
+                  </AlertDescription>
+                </Alert>
+              )}
               <div className="aspect-[4/3] w-full overflow-hidden rounded-md border">
                  <Image
-                    src={placeholderMapImageUrl}
+                    src={mapImageUrl}
                     alt={mapImageAlt}
                     width={800}
                     height={600}
@@ -59,7 +85,7 @@ export function MapLocation({
                   />
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Note: This is a placeholder image. An interactive map using OpenStreetMap data could be integrated here.
+                Map generated using Mapbox Static Images API (or placeholder if unavailable).
               </p>
             </div>
 
@@ -115,7 +141,7 @@ export function MapLocation({
               </div>
             )}
              <p className="text-xs text-muted-foreground mt-4">
-                Administrative data from mock MapIt API. Notable features from PaTMa API (Conservation Areas, Flood Risk). Map placeholder can be replaced with OpenStreetMap visualization.
+                Administrative data from mock MapIt API. Notable features from PaTMa API (Conservation Areas, Flood Risk). Map visualization via Mapbox Static Images API.
               </p>
           </CardContent>
         </Card>
@@ -127,3 +153,4 @@ export function MapLocation({
     </ReportSection>
   );
 }
+

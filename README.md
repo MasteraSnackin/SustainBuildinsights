@@ -1,7 +1,7 @@
 
 # Property Insights Pro
 
-Property Insights Pro is a Next.js application designed to provide comprehensive property redevelopment analysis. It leverages the PaTMa API for property data, Genkit for AI-powered insights and summaries, and provides a placeholder for OpenStreetMap for location visualization. Users can input a UK postcode to generate a detailed report covering various aspects of a property's potential.
+Property Insights Pro is a Next.js application designed to provide comprehensive property redevelopment analysis. It leverages the PaTMa API for property data, Genkit for AI-powered insights and summaries, and Mapbox Static Images API for location visualization. Users can input a UK postcode to generate a detailed report covering various aspects of a property's potential.
 
 ## Features
 
@@ -16,7 +16,7 @@ Property Insights Pro is a Next.js application designed to provide comprehensive
     - Identification of conservation areas.
     - Assessment of planning permission likelihood (qualitative).
 - **Location Overview:**
-    - Placeholder map image for the postcode (OpenStreetMap data can be integrated).
+    - Static map image for the postcode (Mapbox Static Images API).
     - Administrative boundaries (Local Authority, Council, Constituency, Ward, Country).
     - Notable geographic features (e.g., conservation areas, flood zones).
 - **Neighborhood Insights:**
@@ -69,7 +69,7 @@ Property Insights Pro is a Next.js application designed to provide comprehensive
         - (Mock) Podcast Audio Generation
 - **APIs:**
     - PaTMa API (Property Prospector API - mock implementation in `src/services/patma.ts`)
-    - OpenStreetMap (Potential data source for maps, currently placeholder image)
+    - Mapbox Static Images API (for map visualization)
     - Browser SpeechSynthesis API (for "Read Aloud")
     - Browser Web Speech API (for voice input in chatbot)
 
@@ -81,20 +81,21 @@ Property Insights Pro is a Next.js application designed to provide comprehensive
 - npm or yarn
 - A PaTMa API Key (for actual data fetching, though the current service is mocked)
 - A Google AI API Key (for Genkit, configure in `.env` or your Google Cloud project)
+- A Mapbox Access Token (for map visualization)
 
 ### Environment Variables
 
-Create a `.env` file in the root of the project and add your Google AI API key and your PaTMa API key:
+Create a `.env` file in the root of the project and add your API keys:
 
 ```env
 # .env
 GOOGLE_API_KEY=YOUR_GOOGLE_AI_API_KEY
 PATMA_API_KEY=YOUR_PATMA_API_KEY_HERE
+NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=YOUR_MAPBOX_ACCESS_TOKEN_HERE
 ```
 
-Create a `.env.local` file in the root of the project if you have any local-specific environment variables. Currently, none are strictly required by the base application beyond those in `.env`.
-
-**Note:** The PaTMa API key is now configured in the `.env` file. The application will read it from there.
+Create a `.env.local` file in the root of the project if you have any local-specific environment variables. 
+**Note:** The `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` is prefixed with `NEXT_PUBLIC_` to make it available on the client-side for map image generation. The PaTMa and Google API keys are server-side.
 
 ### Installation
 
@@ -209,9 +210,9 @@ Genkit is used for AI-powered features:
 
 The Genkit AI client is initialized in `src/ai/genkit.ts`.
 
-### OpenStreetMap (Placeholder)
+### Mapbox Static Images API
 
-The `src/components/property-insights/map-location.tsx` component currently uses a placeholder image for map visualization. This can be replaced with an integration with OpenStreetMap (e.g., using Leaflet.js or OpenLayers) to display interactive maps or fetch static map tiles. Administrative boundary data is simulated via the `getAdministrativeBoundaries` function in `src/services/patma.ts`, mimicking services like MapIt.
+The `src/components/property-insights/map-location.tsx` component uses the Mapbox Static Images API to display a map of the specified postcode. This requires a `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` to be set in your environment variables. The component fetches coordinates (simulated via `getAdministrativeBoundaries` in `src/services/patma.ts`) and uses them to request a static map image from Mapbox. If the token or coordinates are unavailable, a placeholder image is shown.
 
 ## Contributing
 
