@@ -96,6 +96,10 @@ export function EnergyClimateEnvironment({
   industrialActivityData,
   isLoading,
 }: EnergyClimateEnvironmentProps) {
+  
+  const soilDrainageVisuals = soilTypeData ? getDrainageVisuals(soilTypeData.drainageClass) : getDrainageVisuals(null);
+  const waterQualityVisuals = waterSourceData ? getWaterQualityVisuals(waterSourceData.waterQuality) : getWaterQualityVisuals(null);
+
   return (
     <ReportSection title="Energy, Climate & Environment" isLoading={isLoading} icon={<Leaf />}>
       <div className="space-y-6">
@@ -294,10 +298,10 @@ export function EnergyClimateEnvironment({
                 </div>
                  <div className="flex items-center justify-between p-3 bg-card rounded-md border">
                     <div className="flex items-center">
-                        <getDrainageVisuals.Icon className={cn("mr-2 h-5 w-5", getDrainageVisuals(soilTypeData.drainageClass).colorClass)} />
+                        <soilDrainageVisuals.Icon className={cn("mr-2 h-5 w-5", soilDrainageVisuals.colorClass)} />
                         <span className="font-medium">Drainage Class</span>
                     </div>
-                    <Badge variant="outline" className={getDrainageVisuals(soilTypeData.drainageClass).colorClass}>{getDrainageVisuals(soilTypeData.drainageClass).text}</Badge>
+                    <Badge variant="outline" className={soilDrainageVisuals.colorClass}>{soilDrainageVisuals.text}</Badge>
                 </div>
                  <div className="flex items-center justify-between p-3 bg-card rounded-md border">
                     <div className="flex items-center">
@@ -348,10 +352,10 @@ export function EnergyClimateEnvironment({
                 </div>
                 <div className="flex items-center justify-between p-3 bg-card rounded-md border">
                     <div className="flex items-center">
-                        <getWaterQualityVisuals.Icon className={cn("mr-2 h-5 w-5", getWaterQualityVisuals(waterSourceData.waterQuality).colorClass)} />
+                        <waterQualityVisuals.Icon className={cn("mr-2 h-5 w-5", waterQualityVisuals.colorClass)} />
                         <span className="font-medium">Local Water Quality</span>
                     </div>
-                     <Badge variant="outline" className={getWaterQualityVisuals(waterSourceData.waterQuality).colorClass}>{getWaterQualityVisuals(waterSourceData.waterQuality).text}</Badge>
+                     <Badge variant="outline" className={waterQualityVisuals.colorClass}>{waterQualityVisuals.text}</Badge>
                 </div>
                 {waterSourceData.sourceUrl && (
                   <a href={waterSourceData.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline mt-2 block pt-2">
