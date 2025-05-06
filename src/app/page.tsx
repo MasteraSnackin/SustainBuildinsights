@@ -8,6 +8,7 @@ import { Logo } from '@/components/icons/logo';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ReportChatbot } from '@/components/property-insights/report-chatbot';
 import type { GenerateExecutiveSummaryOutput } from '@/ai/flows/generate-executive-summary';
+import { ReportActions } from '@/components/report-actions';
 
 
 export default function Home() {
@@ -21,6 +22,8 @@ export default function Home() {
     setExecutiveSummaryText(data.executiveSummary?.summary ?? null);
     setChatbotContextPostcode(data.submittedPostcode);
   };
+
+  const isReportAvailable = executiveSummaryText !== null;
 
   return (
     <div className="flex min-h-screen w-full">
@@ -63,6 +66,7 @@ export default function Home() {
         </header>
         <ScrollArea className="flex-1">
           <main className="lg:max-w-7xl xl:max-w-none"> {/* Removed p-4 md:p-6 lg:p-8 as dashboard has its own padding */}
+            {isReportAvailable && <ReportActions reportContent={executiveSummaryText} />}
             <PropertyInsightsDashboard 
               onSummaryGenerated={setExecutiveSummaryText}
               onLoadingChange={setIsReportLoading}
