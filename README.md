@@ -1,6 +1,7 @@
+
 # Property Insights Pro
 
-Property Insights Pro is a Next.js application designed to provide comprehensive property redevelopment analysis. It leverages the PaTMa API for property data, Genkit for AI-powered insights and summaries, and Mapbox for location visualization. Users can input a UK postcode to generate a detailed report covering various aspects of a property's potential.
+Property Insights Pro is a Next.js application designed to provide comprehensive property redevelopment analysis. It leverages the PaTMa API for property data, Genkit for AI-powered insights and summaries, and provides a placeholder for OpenStreetMap for location visualization. Users can input a UK postcode to generate a detailed report covering various aspects of a property's potential.
 
 ## Features
 
@@ -15,8 +16,7 @@ Property Insights Pro is a Next.js application designed to provide comprehensive
     - Identification of conservation areas.
     - Assessment of planning permission likelihood (qualitative).
 - **Location Overview:**
-    - Static map image of the postcode using Mapbox Static Images API.
-    - Option to use custom map styles from [Mapbox Studio](https://www.mapbox.com/mapbox-studio).
+    - Placeholder map image for the postcode (OpenStreetMap data can be integrated).
     - Administrative boundaries (Local Authority, Council, Constituency, Ward, Country).
     - Notable geographic features (e.g., conservation areas, flood zones).
 - **Neighborhood Insights:**
@@ -69,7 +69,7 @@ Property Insights Pro is a Next.js application designed to provide comprehensive
         - (Mock) Podcast Audio Generation
 - **APIs:**
     - PaTMa API (Property Prospector API - mock implementation in `src/services/patma.ts`)
-    - Mapbox Static Images API (for map visualization)
+    - OpenStreetMap (Potential data source for maps, currently placeholder image)
     - Browser SpeechSynthesis API (for "Read Aloud")
     - Browser Web Speech API (for voice input in chatbot)
 
@@ -81,8 +81,6 @@ Property Insights Pro is a Next.js application designed to provide comprehensive
 - npm or yarn
 - A PaTMa API Key (for actual data fetching, though the current service is mocked)
 - A Google AI API Key (for Genkit, configure in `.env` or your Google Cloud project)
-- A Mapbox Access Token (for displaying maps, configure in `.env.local`)
-- (Optional) A Mapbox Style ID if you want to use custom maps from [Mapbox Studio](https://www.mapbox.com/mapbox-studio).
 
 ### Environment Variables
 
@@ -91,18 +89,10 @@ Create a `.env` file in the root of the project and add your Google AI API key a
 ```env
 # .env
 GOOGLE_API_KEY=YOUR_GOOGLE_AI_API_KEY
-PATMA_API_KEY=YOUR_PATMA_API_KEY_HERE 
+PATMA_API_KEY=YOUR_PATMA_API_KEY_HERE
 ```
 
-Create a `.env.local` file in the root of the project and add your Mapbox access token and optionally, your Mapbox style ID:
-
-```env.local
-# .env.local
-NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=YOUR_MAPBOX_ACCESS_TOKEN
-# Optional: Specify your custom Mapbox style ID from Mapbox Studio (e.g., yourusername/ckxxxxxxxxxxxxxxx)
-# If not set, it defaults to 'mapbox/streets-v12'
-# NEXT_PUBLIC_MAPBOX_STYLE_ID=yourusername/yourstyleid 
-```
+Create a `.env.local` file in the root of the project if you have any local-specific environment variables. Currently, none are strictly required by the base application beyond those in `.env`.
 
 **Note:** The PaTMa API key is now configured in the `.env` file. The application will read it from there.
 
@@ -219,12 +209,9 @@ Genkit is used for AI-powered features:
 
 The Genkit AI client is initialized in `src/ai/genkit.ts`.
 
-### Mapbox Static Images API
+### OpenStreetMap (Placeholder)
 
-The `src/components/property-insights/map-location.tsx` component uses the Mapbox Static Images API to display a map for the given postcode. 
-- An access token (`NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`) must be provided in `.env.local`. 
-- Optionally, a custom map style ID (`NEXT_PUBLIC_MAPBOX_STYLE_ID`) from [Mapbox Studio](https://www.mapbox.com/mapbox-studio) can be specified in `.env.local`. If not provided, it defaults to `mapbox/streets-v12`.
-If the access token is missing or invalid, a placeholder image is shown.
+The `src/components/property-insights/map-location.tsx` component currently uses a placeholder image for map visualization. This can be replaced with an integration with OpenStreetMap (e.g., using Leaflet.js or OpenLayers) to display interactive maps or fetch static map tiles. Administrative boundary data is simulated via the `getAdministrativeBoundaries` function in `src/services/patma.ts`, mimicking services like MapIt.
 
 ## Contributing
 
