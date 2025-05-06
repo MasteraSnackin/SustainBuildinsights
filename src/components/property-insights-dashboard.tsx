@@ -62,7 +62,7 @@ export function PropertyInsightsDashboard() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       postcode: '',
-      propertyPrice: undefined,
+      propertyPrice: '' as unknown as number, // Initialize as empty string to avoid controlled/uncontrolled error
       apiKey: '',
     },
   });
