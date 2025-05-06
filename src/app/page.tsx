@@ -1,8 +1,10 @@
+
 import { PropertyInsightsDashboard } from '@/components/property-insights-dashboard';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import Image from 'next/image'; // Added import
 
 export default function Home() {
   return (

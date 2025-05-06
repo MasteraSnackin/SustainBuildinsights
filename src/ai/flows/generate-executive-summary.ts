@@ -15,7 +15,7 @@ import {getAskingPrices, getSoldPrices, getPriceTrends, getPlanningApplications,
 
 const GenerateExecutiveSummaryInputSchema = z.object({
   postcode: z.string().describe('The postcode of the property to analyze.'),
-  propertyPrice: z.number().describe('The current price of the property.'),
+  // propertyPrice: z.number().describe('The current price of the property.'), // Removed as per request
 });
 export type GenerateExecutiveSummaryInput = z.infer<typeof GenerateExecutiveSummaryInputSchema>;
 
@@ -36,16 +36,15 @@ const generateExecutiveSummaryPrompt = ai.definePrompt({
 
 Consider the following:
 
-*   Property Valuation & Market Analysis: Compare current asking price ({{{propertyPrice}}}) vs. local sold prices, calculate price-per-floor-area metrics, and analyze 5-year price trends in the postcode.
+*   Property Valuation & Market Analysis: Analyze local asking prices, local sold prices, calculate price-per-floor-area metrics, and analyze 5-year price trends in the postcode.
 *   Planning & Regulatory Landscape: List recent approved/rejected planning applications, identify conservation areas or Article 4 restrictions, and assess likelihood of planning permission success.
 *   Neighborhood Insights: Evaluate school Ofsted ratings and catchment areas, compare crime rates to regional averages, and profile demographics for target tenant/buyer alignment.
 *   Energy, Climate & Environment: Summarize EPC rating, flood risk, air quality, and historical climate data. Note any implications for redevelopment (e.g., insulation upgrades, flood mitigation).
 *   Transport Links: Describe key local transport options (train, bus, road access) and their proximity.
-*   Financial Feasibility: Calculate stamp duty for acquisition, estimate rental yield using local rent data, and model ROI with refurbishment cost assumptions (use £150/sqft baseline).
+*   Financial Feasibility: Calculate stamp duty for acquisition (assume a typical market price for the area if not provided), estimate rental yield using local rent data, and model ROI with refurbishment cost assumptions (use £150/sqft baseline).
 *   Case Studies: Compare similar redeveloped properties, highlighting profit margins and time-to-sale trends.
 
 Postcode: {{{postcode}}}
-Property Price: {{{propertyPrice}}}
 
 Executive Summary:`,
 });
@@ -60,6 +59,10 @@ const generateExecutiveSummaryFlow = ai.defineFlow(
     // Call PaTMa API endpoints to gather data
     // Note: The actual API calls are mocked in services/patma.ts
     // In a real application, these would be live API calls with error handling and potential rate limiting.
+    // A mock property price is used here for services that might require it (like stamp duty).
+    // The AI prompt itself no longer directly receives a user-inputted property price.
+    const mockPropertyPriceForServices = 500000; // Example value, can be adjusted or derived
+
     const askingPrices = await getAskingPrices(input.postcode);
     const soldPrices = await getSoldPrices(input.postcode);
     const priceTrends = await getPriceTrends(input.postcode);
@@ -68,7 +71,7 @@ const generateExecutiveSummaryFlow = ai.defineFlow(
     const schools = await getSchools(input.postcode);
     const crimeRates = await getCrimeRates(input.postcode);
     const demographics = await getDemographics(input.postcode);
-    const stampDuty = await getStampDuty(input.propertyPrice);
+    const stampDuty = await getStampDuty(mockPropertyPriceForServices);
     const rentEstimates = await getRentEstimates(input.postcode);
     const soldPricesFloorArea = await getSoldPricesFloorArea(input.postcode);
     const rentalComparables = await getRentalComparables(input.postcode);
@@ -88,4 +91,3 @@ const generateExecutiveSummaryFlow = ai.defineFlow(
     return output!;
   }
 );
-

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ReportSection, DataDisplay } from './report-section';
@@ -7,29 +8,32 @@ import type { StampDuty, RentEstimates } from '@/services/patma';
 interface FinancialFeasibilityProps {
   stampDuty: StampDuty | null;
   rentEstimates: RentEstimates | null;
-  propertyPrice?: number;
+  propertyPrice?: number; // Still useful for displaying what price was used for stamp duty
   isLoading: boolean;
 }
 
 const REFURBISHMENT_COST_PER_SQFT = 150; // Baseline as per requirements
+const DEFAULT_PROPERTY_PRICE_FOR_CALCS = 500000; // Default if not provided by dashboard
 
 export function FinancialFeasibility({
   stampDuty,
   rentEstimates,
-  propertyPrice,
+  propertyPrice, // This is the price used for stamp duty by the dashboard
   isLoading,
 }: FinancialFeasibilityProps) {
   
+  const priceForCalculations = propertyPrice || DEFAULT_PROPERTY_PRICE_FOR_CALCS;
+
   const annualRent = rentEstimates ? rentEstimates.averageRent * 12 : undefined;
-  const rentalYield = propertyPrice && annualRent && propertyPrice > 0 ? (annualRent / propertyPrice) * 100 : undefined;
+  const rentalYield = priceForCalculations && annualRent && priceForCalculations > 0 ? (annualRent / priceForCalculations) * 100 : undefined;
 
   // ROI calculation requires floor area, which is not directly available from current mocks.
   // Placeholder for ROI:
   const estimatedFloorAreaSqFt = 1000; // Example placeholder, replace with actual or estimated data
   const totalRefurbishmentCost = estimatedFloorAreaSqFt * REFURBISHMENT_COST_PER_SQFT;
-  const totalInvestment = (propertyPrice || 0) + (stampDuty?.amount || 0) + totalRefurbishmentCost;
+  const totalInvestment = priceForCalculations + (stampDuty?.amount || 0) + totalRefurbishmentCost;
   // Assuming a hypothetical resale value for ROI calculation. This is highly speculative without market data.
-  const hypotheticalResaleValue = (propertyPrice || 0) * 1.2; // e.g. 20% uplift after refurb
+  const hypotheticalResaleValue = priceForCalculations * 1.2; // e.g. 20% uplift after refurb
   const profit = hypotheticalResaleValue - totalInvestment;
   const roi = totalInvestment > 0 ? (profit / totalInvestment) * 100 : undefined;
 
@@ -39,7 +43,7 @@ export function FinancialFeasibility({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <DataDisplay label="Stamp Duty Land Tax (SDLT)" value={stampDuty?.amount} unit="GBP" citationNumber={9} />
-          <p className="text-xs text-muted-foreground mt-1">Calculated based on the property price of £{propertyPrice?.toLocaleString() || 'N/A'}.</p>
+          <p className="text-xs text-muted-foreground mt-1">Calculated based on a property price of £{priceForCalculations.toLocaleString()}.</p>
         </div>
         <div>
           <DataDisplay label="Estimated Average Monthly Rent" value={rentEstimates?.averageRent} unit="GBP" citationNumber={10} />

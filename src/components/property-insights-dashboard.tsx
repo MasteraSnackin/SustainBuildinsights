@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertTriangle } from 'lucide-react';
+import Image from 'next/image'; // Added import
 
 import { ExecutiveSummary } from './property-insights/executive-summary';
 import { ValuationMarketAnalysis } from './property-insights/valuation-market-analysis';
@@ -19,6 +20,7 @@ import { FinancialFeasibility } from './property-insights/financial-feasibility'
 import { CaseStudies } from './property-insights/case-studies';
 import { EnergyClimateEnvironment } from './property-insights/energy-climate-environment';
 import { TransportLinks } from './property-insights/transport-links';
+import { MapLocation } from './property-insights/map-location';
 
 
 import {
@@ -26,16 +28,15 @@ import {
   getConservationAreas, getSchools, getCrimeRates, getDemographics,
   getStampDuty, getRentEstimates, getSoldPricesFloorArea, getRentalComparables,
   getEpcData, getFloodRiskData, getAirQualityData, getHistoricalClimateData, getTransportLinks,
-  type AskingPrice, type SoldPrice, type PriceTrends, type PlanningApplication,
+  type AskingPrice, type SoldPrice, type PriceTrends as PriceTrendData, type PlanningApplication, // Renamed PriceTrends to avoid conflict
   type ConservationArea, type School, type CrimeRates as CrimeRatesData, type Demographics as DemographicsData,
   type StampDuty as StampDutyData, type RentEstimates as RentEstimatesData, type SoldPricesFloorArea as SoldPricesFloorAreaData, type RentalComparables as RentalComparablesData,
-  type EpcData, type FloodRiskData, type AirQualityData, type HistoricalClimateData, type TransportLink
+  type EpcData as EpcApiData, type FloodRiskData as FloodRiskApiData, type AirQualityData as AirQualityApiData, type HistoricalClimateData as HistoricalClimateApiData, type TransportLink
 } from '@/services/patma';
 import { generateExecutiveSummary, type GenerateExecutiveSummaryInput, type GenerateExecutiveSummaryOutput } from '@/ai/flows/generate-executive-summary';
 
 const formSchema = z.object({
   postcode: z.string().min(3, { message: 'Postcode must be at least 3 characters.' }).regex(/^[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][A-Z]{2}$/i, { message: 'Invalid UK postcode format.'}),
-  propertyPrice: z.coerce.number().positive({ message: 'Property price must be a positive number.' }),
   apiKey: z.string().min(1, {message: "PaTMa API Key is required."})
 });
 
@@ -50,7 +51,7 @@ export function PropertyInsightsDashboard() {
   const [executiveSummary, setExecutiveSummary] = useState<GenerateExecutiveSummaryOutput | null>(null);
   const [askingPrices, setAskingPrices] = useState<AskingPrice[] | null>(null);
   const [soldPrices, setSoldPrices] = useState<SoldPrice[] | null>(null);
-  const [priceTrends, setPriceTrends] = useState<PriceTrends[] | null>(null);
+  const [priceTrends, setPriceTrends] = useState<PriceTrendData[] | null>(null);
   const [planningApplications, setPlanningApplications] = useState<PlanningApplication[] | null>(null);
   const [conservationAreas, setConservationAreas] = useState<ConservationArea[] | null>(null);
   const [schools, setSchools] = useState<School[] | null>(null);
@@ -61,26 +62,24 @@ export function PropertyInsightsDashboard() {
   const [soldPricesFloorArea, setSoldPricesFloorArea] = useState<SoldPricesFloorAreaData[] | null>(null);
   const [rentalComparables, setRentalComparables] = useState<RentalComparablesData[] | null>(null);
   
-  // New state for Energy, Climate, Environment
-  const [epcData, setEpcData] = useState<EpcData | null>(null);
-  const [floodRiskData, setFloodRiskData] = useState<FloodRiskData | null>(null);
-  const [airQualityData, setAirQualityData] = useState<AirQualityData | null>(null);
-  const [historicalClimateData, setHistoricalClimateData] = useState<HistoricalClimateData | null>(null);
+  const [epcData, setEpcData] = useState<EpcApiData | null>(null);
+  const [floodRiskData, setFloodRiskData] = useState<FloodRiskApiData | null>(null);
+  const [airQualityData, setAirQualityData] = useState<AirQualityApiData | null>(null);
+  const [historicalClimateData, setHistoricalClimateData] = useState<HistoricalClimateApiData | null>(null);
   const [transportLinks, setTransportLinks] = useState<TransportLink[] | null>(null);
 
-  const [currentPropertyPrice, setCurrentPropertyPrice] = useState<number | undefined>(undefined);
+  const [submittedPostcode, setSubmittedPostcode] = useState<string | null>(null);
+  const [submittedPropertyPrice, setSubmittedPropertyPrice] = useState<number | undefined>(undefined);
 
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       postcode: '',
-      propertyPrice: '' as unknown as number, // Initialize as empty string to avoid controlled/uncontrolled error
       apiKey: '',
     },
   });
 
-  // Store API key in localStorage (simple approach for this hackathon)
   useEffect(() => {
     const storedApiKey = localStorage.getItem('patmaApiKey');
     if (storedApiKey) {
@@ -91,14 +90,20 @@ export function PropertyInsightsDashboard() {
   const handleGenerateReport: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true);
     setApiError(null);
-    setCurrentPropertyPrice(data.propertyPrice);
+    setSubmittedPostcode(data.postcode);
+    // Property price is no longer directly asked in the form for the AI summary,
+    // but financial feasibility might still use it. For now, we'll set a mock price or handle it internally.
+    // Let's set a default mock price for now if it's needed by stamp duty etc.
+    const mockPropertyPrice = 500000; // Example, adjust if needed
+    setSubmittedPropertyPrice(mockPropertyPrice);
+
 
     localStorage.setItem('patmaApiKey', data.apiKey);
     
     try {
       const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
       let callCount = 0;
-      const maxCallsPerMinute = 10; // Adjusted for more API calls
+      const maxCallsPerMinute = 10; 
       const callInterval = 60000 / maxCallsPerMinute; 
 
       const fetchDataWithRateLimit = async <T>(fetchFn: () => Promise<T>): Promise<T> => {
@@ -121,7 +126,7 @@ export function PropertyInsightsDashboard() {
         fetchDataWithRateLimit(() => getSchools(data.postcode)),
         fetchDataWithRateLimit(() => getCrimeRates(data.postcode)),
         fetchDataWithRateLimit(() => getDemographics(data.postcode)),
-        fetchDataWithRateLimit(() => getStampDuty(data.propertyPrice)),
+        fetchDataWithRateLimit(() => getStampDuty(mockPropertyPrice)), // Using mock price
         fetchDataWithRateLimit(() => getRentEstimates(data.postcode)),
         fetchDataWithRateLimit(() => getSoldPricesFloorArea(data.postcode)),
         fetchDataWithRateLimit(() => getRentalComparables(data.postcode)),
@@ -152,7 +157,9 @@ export function PropertyInsightsDashboard() {
       
       const executiveSummaryInput: GenerateExecutiveSummaryInput = {
         postcode: data.postcode,
-        propertyPrice: data.propertyPrice,
+        // Property price is removed from input to the AI flow as per request.
+        // The AI prompt will need to be adjusted if it relied heavily on a specific user-inputted price.
+        // For now, we assume the AI can infer market context from other data points or use a general assessment.
       };
       const summaryOutput = await generateExecutiveSummary(executiveSummaryInput);
       setExecutiveSummary(summaryOutput);
@@ -179,7 +186,7 @@ export function PropertyInsightsDashboard() {
     <div className="container mx-auto p-4 md:p-8">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleGenerateReport)} className="mb-8 p-6 bg-card rounded-lg shadow-md">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
             <FormField
               control={form.control}
               name="postcode"
@@ -188,19 +195,6 @@ export function PropertyInsightsDashboard() {
                   <FormLabel>Postcode</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., SW1A 1AA" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="propertyPrice"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Property Asking Price (£)</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="e.g., 500000" {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -249,11 +243,11 @@ export function PropertyInsightsDashboard() {
       {isAnyDataAvailable && (
         <div className="space-y-8">
           <ExecutiveSummary summaryData={executiveSummary} isLoading={isLoading && !executiveSummary} />
+          <MapLocation postcode={submittedPostcode} isLoading={isLoading && !submittedPostcode} />
           <ValuationMarketAnalysis
             askingPrices={askingPrices}
             soldPrices={soldPrices}
             priceTrends={priceTrends}
-            currentAskingPrice={currentPropertyPrice}
             isLoading={isLoading && (!askingPrices || !soldPrices || !priceTrends)}
           />
           <PlanningRegulatory
@@ -281,7 +275,7 @@ export function PropertyInsightsDashboard() {
           <FinancialFeasibility
             stampDuty={stampDuty}
             rentEstimates={rentEstimates}
-            propertyPrice={currentPropertyPrice}
+            propertyPrice={submittedPropertyPrice} // Use the mock/default price for calculations
             isLoading={isLoading && (!stampDuty || !rentEstimates)}
           />
           <CaseStudies
@@ -294,11 +288,12 @@ export function PropertyInsightsDashboard() {
       
       {!isLoading && !isAnyDataAvailable && !apiError && (
         <div className="text-center py-12">
-          <img src="https://picsum.photos/seed/property/400/300" alt="Property Illustration" data-ai-hint="property illustration" className="mx-auto mb-6 rounded-lg shadow-md" />
+          <Image src="https://picsum.photos/seed/property/400/300" alt="Property Illustration" data-ai-hint="property illustration" className="mx-auto mb-6 rounded-lg shadow-md" width={400} height={300} />
           <h2 className="text-2xl font-semibold text-primary mb-2">Welcome to Property Insights Pro</h2>
-          <p className="text-muted-foreground">Enter a postcode and property price above to generate your detailed redevelopment potential report.</p>
+          <p className="text-muted-foreground">Enter a postcode and PaTMa API key above to generate your detailed redevelopment potential report.</p>
         </div>
       )}
     </div>
   );
 }
+

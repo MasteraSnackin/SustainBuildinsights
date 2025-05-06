@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ReportSection, DataDisplay, DataListDisplay } from './report-section';
@@ -9,7 +10,6 @@ interface ValuationMarketAnalysisProps {
   askingPrices: AskingPrice[] | null;
   soldPrices: SoldPrice[] | null;
   priceTrends: PriceTrends[] | null;
-  currentAskingPrice?: number;
   isLoading: boolean;
 }
 
@@ -17,7 +17,6 @@ export function ValuationMarketAnalysis({
   askingPrices,
   soldPrices,
   priceTrends,
-  currentAskingPrice,
   isLoading,
 }: ValuationMarketAnalysisProps) {
   const fiveYearsAgo = new Date();
@@ -37,13 +36,19 @@ export function ValuationMarketAnalysis({
     ? recentSoldPrices.reduce((sum, p) => sum + p.price, 0) / recentSoldPrices.length 
     : undefined;
 
+  // Calculate 5-year average sold price
+  const fiveYearAverageSoldPrice = recentSoldPrices && recentSoldPrices.length > 0
+    ? recentSoldPrices.reduce((sum, p) => sum + p.price, 0) / recentSoldPrices.length
+    : undefined;
+
   return (
     <ReportSection title="Property Valuation & Market Analysis" isLoading={isLoading} icon={<DollarSign />}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <DataDisplay label="Current Property Asking Price" value={currentAskingPrice} unit="GBP" citationNumber={1} />
+          {/* currentAskingPrice prop removed */}
           <DataDisplay label="Latest Local Asking Price (last 5 years)" value={latestAskingPriceLocal} unit="GBP" citationNumber={1} />
           <DataDisplay label="Average Local Sold Price (last 5 years)" value={averageSoldPriceLocal ? Math.round(averageSoldPriceLocal) : undefined} unit="GBP" citationNumber={2} />
+          <DataDisplay label="5-Year Average Sold Price" value={fiveYearAverageSoldPrice ? Math.round(fiveYearAverageSoldPrice) : undefined} unit="GBP" citationNumber={2} />
           
           <DataListDisplay
             label="Asking Prices (last 5 years)"
