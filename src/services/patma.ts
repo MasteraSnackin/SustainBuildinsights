@@ -497,6 +497,10 @@ export interface HistoricalClimateData {
   averageAnnualRainfallMm: number;
   /** Average annual mean temperature in Celsius */
   averageAnnualMeanTempC: number;
+  /** Average daily sunshine hours */
+  averageSunshineHoursPerDay?: number;
+  /** Average wind speed in mph */
+  averageWindSpeedMph?: number;
   /** Number of years data is based on */
   dataYears?: number;
   /** Source of the climate data */
@@ -509,11 +513,13 @@ export interface HistoricalClimateData {
  * @returns A promise that resolves to HistoricalClimateData or null if not found.
  */
 export async function getHistoricalClimateData(postcode: string): Promise<HistoricalClimateData | null> {
-  // TODO: Implement by calling a free climate data API (e.g., Met Office for UK, or global sources)
+  // TODO: Implement by calling a free climate data API (e.g., Met Office for UK, or global sources like Open-Meteo)
   // Mock data for now (general UK averages)
   return {
     averageAnnualRainfallMm: Math.floor(Math.random() * 400) + 800, // 800-1200mm
     averageAnnualMeanTempC: parseFloat((Math.random() * 5 + 8).toFixed(1)), // 8.0-13.0°C
+    averageSunshineHoursPerDay: parseFloat((Math.random() * 2 + 3).toFixed(1)), // 3-5 hours (UK average)
+    averageWindSpeedMph: parseFloat((Math.random() * 5 + 8).toFixed(1)), // 8-13 mph
     dataYears: 30,
     source: "Mock Climate Data Service (General UK Averages)"
   };
@@ -628,5 +634,110 @@ export async function getAdministrativeBoundaries(postcode: string): Promise<Adm
     constituency: 'Generic Constituency',
     ward: 'Generic Ward',
     country: 'United Kingdom (Mock)',
+  };
+}
+
+
+/** Represents tree coverage data */
+export interface TreeCoverageData {
+  coveragePercentage: number;
+  dominantSpecies?: string[];
+  lastUpdated: string;
+  sourceUrl?: string;
+}
+
+/**
+ * Retrieves tree coverage data for a given postcode or area.
+ * @param postcode The postcode to search for.
+ * @returns A promise that resolves to TreeCoverageData or null.
+ */
+export async function getTreeCoverageData(postcode: string): Promise<TreeCoverageData | null> {
+  // TODO: Integrate with a real API for tree coverage (e.g., local council data, forestry commission, OpenStreetMap data analysis)
+  // Mock data
+  return {
+    coveragePercentage: parseFloat((Math.random() * 30 + 5).toFixed(1)), // 5-35%
+    dominantSpecies: [['Oak', 'Ash', 'Beech'], ['Pine', 'Birch'], ['Sycamore', 'Lime']][Math.floor(Math.random() * 3)],
+    lastUpdated: new Date(new Date().getFullYear() - Math.floor(Math.random() * 2), Math.floor(Math.random() * 12), 1).toISOString(),
+    sourceUrl: 'https://www.forestresearch.gov.uk/tools-and-resources/urban-tree-cover-map/' // Example source
+  };
+}
+
+/** Represents soil type data */
+export interface SoilTypeData {
+  primarySoilType: string;
+  soilPh?: number; // Optional
+  drainageClass?: string; // e.g., "Well-drained", "Poorly-drained"
+  agriculturalPotential?: string; // e.g., "Grade 1", "Grade 3b"
+  sourceUrl?: string;
+}
+
+/**
+ * Retrieves soil type data for a given postcode or area.
+ * @param postcode The postcode to search for.
+ * @returns A promise that resolves to SoilTypeData or null.
+ */
+export async function getSoilTypeData(postcode: string): Promise<SoilTypeData | null> {
+  // TODO: Integrate with a real API for soil data (e.g., UK Soil Observatory, LandIS)
+  // Mock data
+  const soilTypes = ['Loamy', 'Clay', 'Sandy', 'Peaty', 'Chalky', 'Silty'];
+  const drainage = ['Well-drained', 'Moderately well-drained', 'Poorly-drained', 'Very poorly-drained'];
+  return {
+    primarySoilType: soilTypes[Math.floor(Math.random() * soilTypes.length)],
+    soilPh: parseFloat((Math.random() * 3 + 5.5).toFixed(1)), // pH 5.5 - 8.5
+    drainageClass: drainage[Math.floor(Math.random() * drainage.length)],
+    agriculturalPotential: `Grade ${Math.floor(Math.random()*3)+1}${['a','b',''][Math.floor(Math.random()*3)]}`,
+    sourceUrl: 'http://www.landis.org.uk/services/ukso.cfm' // Example source
+  };
+}
+
+/** Represents local water source data */
+export interface WaterSourceData {
+  nearestRiverName?: string;
+  nearestRiverDistanceKm?: number;
+  groundwaterAvailability?: string; // e.g., "High", "Moderate", "Low"
+  waterQuality?: string; // e.g., "Good", "Moderate", "Poor" (for nearby surface water)
+  sourceUrl?: string;
+}
+
+/**
+ * Retrieves water source data for a given postcode or area.
+ * @param postcode The postcode to search for.
+ * @returns A promise that resolves to WaterSourceData or null.
+ */
+export async function getWaterSourceData(postcode: string): Promise<WaterSourceData | null> {
+  // TODO: Integrate with a real API for water sources (e.g., Environment Agency, SEPA)
+  // Mock data
+  const rivers = ['River Thames', 'River Severn', 'River Trent', 'River Ouse', 'Local Brook'];
+  return {
+    nearestRiverName: rivers[Math.floor(Math.random() * rivers.length)],
+    nearestRiverDistanceKm: parseFloat((Math.random() * 5 + 0.5).toFixed(1)), // 0.5 - 5.5 km
+    groundwaterAvailability: ['High', 'Moderate', 'Low'][Math.floor(Math.random() * 3)],
+    waterQuality: ['Good', 'Fair', 'Poor'][Math.floor(Math.random() * 3)],
+    sourceUrl: 'https://environment.data.gov.uk/catchment-planning/' // Example source
+  };
+}
+
+/** Represents nearby industrial activity data */
+export interface IndustrialActivityData {
+  hasMajorIndustrialZones: boolean;
+  majorActivities?: string[]; // e.g., "Manufacturing", "Logistics", "Waste Processing"
+  proximityToSensitiveSitesKm?: number; // Distance to nearest residential area, school, hospital from industrial zone
+  sourceUrl?: string;
+}
+
+/**
+ * Retrieves nearby industrial activity data for a given postcode or area.
+ * @param postcode The postcode to search for.
+ * @returns A promise that resolves to IndustrialActivityData or null.
+ */
+export async function getIndustrialActivityData(postcode: string): Promise<IndustrialActivityData | null> {
+  // TODO: Integrate with real APIs or datasets (e.g., local council planning portals, business directories, OSM data)
+  // Mock data
+  const hasZones = Math.random() > 0.6;
+  return {
+    hasMajorIndustrialZones: hasZones,
+    majorActivities: hasZones ? [['Manufacturing', 'Logistics'], ['Chemical Processing'], ['Warehousing', 'Distribution']][Math.floor(Math.random()*3)] : undefined,
+    proximityToSensitiveSitesKm: hasZones ? parseFloat((Math.random() * 2 + 0.5).toFixed(1)) : undefined, // 0.5 - 2.5 km
+    sourceUrl: 'https://www.gov.uk/government/collections/industrial-strategy-building-a-britain-fit-for-the-future' // Example broad source
   };
 }
