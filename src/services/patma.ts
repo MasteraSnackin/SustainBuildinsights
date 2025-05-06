@@ -93,14 +93,14 @@ export async function getPriceTrends(postcode: string): Promise<PriceTrends[]> {
   // TODO: Implement this by calling the PaTMa API.
   const today = new Date();
   const trends: PriceTrends[] = [];
-  for (let i = 0; i < 60; i++) { 
+  for (let i = 0; i < 60; i++) { // 60 months = 5 years
     const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
     trends.push({
-      averagePrice: 475000 - (i * 1000) + (Math.random() * 20000 - 10000), 
+      averagePrice: 475000 - (i * 1000) + (Math.random() * 20000 - 10000), // Simulate some fluctuation
       date: date.toISOString().split('T')[0],
     });
   }
-  return trends.reverse(); 
+  return trends.reverse(); // Return in chronological order
 }
 
 /**
@@ -142,7 +142,7 @@ export async function getPlanningApplications(postcode: string): Promise<Plannin
     { applicationId: 'PA/21/00101', status: 'approved', date: new Date(today.getFullYear() - 3, today.getMonth(), today.getDate()).toISOString().split('T')[0], description: 'New build dwelling in garden' },
     { applicationId: 'PA/20/00112', status: 'pending', date: new Date(today.getFullYear() - 4, today.getMonth(), today.getDate()).toISOString().split('T')[0], description: 'Garage conversion' },
     { applicationId: 'PA/19/00131', status: 'approved', date: new Date(today.getFullYear() - 5, today.getMonth(), today.getDate()).toISOString().split('T')[0], description: 'Two storey side extension' },
-    { applicationId: 'PA/18/00145', status: 'rejected', date: new Date(today.getFullYear() - 6, today.getMonth(), today.getDate()).toISOString().split('T')[0], description: 'Demolition and rebuild' }, 
+    { applicationId: 'PA/18/00145', status: 'rejected', date: new Date(today.getFullYear() - 6, today.getMonth(), today.getDate()).toISOString().split('T')[0], description: 'Demolition and rebuild' }, // Older than 5 years
   ];
 }
 
@@ -165,6 +165,7 @@ export async function getConservationAreas(postcode: string): Promise<Conservati
   // const apiKey = process.env.PATMA_API_KEY;
   // if (!apiKey) throw new Error("PaTMa API Key not configured in .env");
   // TODO: Implement this by calling the PaTMa API.
+  // This mock returns the same data regardless of postcode for simplicity.
   return [
     {
       name: 'Test Conservation Area',
@@ -298,8 +299,9 @@ export async function getStampDuty(price: number): Promise<StampDuty> {
   // const apiKey = process.env.PATMA_API_KEY;
   // if (!apiKey) throw new Error("PaTMa API Key not configured in .env");
   // TODO: Implement this by calling the PaTMa API.
+  // Simplified SDLT calculation for England/NI first-time buyer (example)
   let amount = 0;
-  if (price > 250000) {
+  if (price > 250000) { // Nil rate band up to £250k
     amount += (Math.min(price, 925000) - 250000) * 0.05;
   }
   if (price > 925000) {
@@ -333,7 +335,7 @@ export async function getRentEstimates(postcode: string): Promise<RentEstimates>
   // if (!apiKey) throw new Error("PaTMa API Key not configured in .env");
   // TODO: Implement this by calling the PaTMa API.
   return {
-    averageRent: 1500 + (Math.random() * 500 - 250), 
+    averageRent: 1500 + (Math.random() * 500 - 250), // Simulate some fluctuation
   };
 }
 
@@ -423,19 +425,20 @@ export interface EpcData {
 export async function getEpcData(postcode: string): Promise<EpcData | null> {
   // const apiKey = process.env.PATMA_API_KEY; // Or specific API key for EPC service
   // if (!apiKey) console.warn("EPC API Key not configured"); // Or throw error
-  // TODO: Implement by calling a free EPC API 
+  // TODO: Implement by calling a free EPC API (e.g., Open EPB Register, though access might be restricted)
+  // This mock returns random but plausible EPC data.
   const today = new Date();
   const ratings = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
   const currentRating = ratings[Math.floor(Math.random() * ratings.length)];
-  const potentialRating = ratings[Math.max(0, ratings.indexOf(currentRating) - Math.floor(Math.random() * 2))];
+  const potentialRating = ratings[Math.max(0, ratings.indexOf(currentRating) - Math.floor(Math.random() * 2))]; // Potential is usually better or same
 
   return {
     currentRating,
     potentialRating,
-    currentScore: Math.floor(Math.random() * 80) + 20, 
+    currentScore: Math.floor(Math.random() * 80) + 20, // Score between 20 and 100
     potentialScore: Math.floor(Math.random() * (100 - (ratings.indexOf(potentialRating) * 10))) + (ratings.indexOf(potentialRating) * 10 + 5),
     assessmentDate: new Date(today.getFullYear() - Math.floor(Math.random() * 5), today.getMonth(), today.getDate()).toISOString().split('T')[0],
-    reportUrl: `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(postcode)}` 
+    reportUrl: `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${encodeURIComponent(postcode)}` // Example link
   };
 }
 
@@ -445,7 +448,7 @@ export async function getEpcData(postcode: string): Promise<EpcData | null> {
 export interface FloodRiskData {
   riversAndSea: string;
   surfaceWater: string;
-  reservoirs?: string; 
+  reservoirs?: string; // Some areas might not have reservoir risk
   detailsUrl?: string;
 }
 
@@ -457,13 +460,14 @@ export interface FloodRiskData {
 export async function getFloodRiskData(postcode: string): Promise<FloodRiskData | null> {
   // const apiKey = process.env.FLOOD_API_KEY; // Or specific API key for Flood service
   // if (!apiKey) console.warn("Flood API Key not configured");
-  // TODO: Implement by calling a free Flood Risk API 
+  // TODO: Implement by calling a free Flood Risk API (e.g., UK government APIs)
+  // This mock returns random risk levels.
   const riskLevels = ["Very Low", "Low", "Medium", "High"];
   return {
     riversAndSea: riskLevels[Math.floor(Math.random() * riskLevels.length)],
     surfaceWater: riskLevels[Math.floor(Math.random() * riskLevels.length)],
     reservoirs: riskLevels[Math.floor(Math.random() * riskLevels.length)],
-    detailsUrl: `https://check-long-term-flood-risk.service.gov.uk/postcode?postcode=${encodeURIComponent(postcode)}` 
+    detailsUrl: `https://check-long-term-flood-risk.service.gov.uk/postcode?postcode=${encodeURIComponent(postcode)}` // Example link
   };
 }
 
@@ -485,9 +489,10 @@ export interface AirQualityData {
 export async function getAirQualityData(postcode: string): Promise<AirQualityData | null> {
   // const apiKey = process.env.AQ_API_KEY; // Or specific API key for Air Quality service
   // if (!apiKey) console.warn("Air Quality API Key not configured");
-  // TODO: Implement by calling a free Air Quality API 
+  // TODO: Implement by calling a free Air Quality API (e.g., OpenAQ, Defra UK-AIR)
+  // This mock returns random AQI data.
   const today = new Date();
-  const aqiValue = Math.floor(Math.random() * 150) + 10; 
+  const aqiValue = Math.floor(Math.random() * 150) + 10; // AQI between 10 and 160
   let category = "Good";
   if (aqiValue > 50 && aqiValue <=100) category = "Moderate";
   else if (aqiValue > 100) category = "Unhealthy for Sensitive Groups";
@@ -508,7 +513,7 @@ export interface HistoricalClimateData {
   averageAnnualMeanTempC: number;
   averageSunshineHoursPerDay?: number;
   averageWindSpeedMph?: number;
-  dataYears?: number;
+  dataYears?: number; // e.g., based on 30-year average
   source?: string;
 }
 
@@ -520,12 +525,13 @@ export interface HistoricalClimateData {
 export async function getHistoricalClimateData(postcode: string): Promise<HistoricalClimateData | null> {
   // const apiKey = process.env.CLIMATE_API_KEY; // Or specific API key for Climate service
   // if (!apiKey) console.warn("Climate API Key not configured");
-  // TODO: Implement by calling a free climate data API
+  // TODO: Implement by calling a free climate data API (e.g., Met Office, WorldClim for broader data)
+  // This mock provides generalized UK averages.
   return {
-    averageAnnualRainfallMm: Math.floor(Math.random() * 400) + 800, 
-    averageAnnualMeanTempC: parseFloat((Math.random() * 5 + 8).toFixed(1)), 
-    averageSunshineHoursPerDay: parseFloat((Math.random() * 2 + 3).toFixed(1)), 
-    averageWindSpeedMph: parseFloat((Math.random() * 5 + 8).toFixed(1)), 
+    averageAnnualRainfallMm: Math.floor(Math.random() * 400) + 800, // e.g., 800-1200mm
+    averageAnnualMeanTempC: parseFloat((Math.random() * 5 + 8).toFixed(1)), // e.g., 8-13°C
+    averageSunshineHoursPerDay: parseFloat((Math.random() * 2 + 3).toFixed(1)), // e.g., 3-5 hours
+    averageWindSpeedMph: parseFloat((Math.random() * 5 + 8).toFixed(1)), // e.g., 8-13 mph
     dataYears: 30,
     source: "Mock Climate Data Service (General UK Averages)"
   };
@@ -536,29 +542,43 @@ export async function getHistoricalClimateData(postcode: string): Promise<Histor
  * Represents a transport link.
  */
 export interface TransportLink {
-  type: string;
-  name: string;
+  type: string; // e.g., "Train Station", "Bus Stop", "Motorway Access"
+  name: string; // e.g., "King's Cross Station", "Stop ID: 490008660N", "M25 J10"
   distanceMiles: number;
-  journeyTimeToHub?: string;
+  journeyTimeToHub?: string; // e.g., "London Bridge: 15 mins", "City Centre: 10 mins"
 }
 
 /**
  * Retrieves transport links for a given postcode.
+ * This is a mock implementation. Real-life data would require integrating with
+ * transport APIs like TransportAPI (UK), Google Maps Directions API, Citymapper API, etc.
+ * These APIs often have usage costs and specific query requirements (e.g., coordinates).
  * @param postcode The postcode to search for.
  * @returns A promise that resolves to an array of TransportLink objects or null.
  */
 export async function getTransportLinks(postcode: string): Promise<TransportLink[] | null> {
-  // const apiKey = process.env.TRANSPORT_API_KEY; // Or specific API key for Transport service
-  // if (!apiKey) console.warn("Transport API Key not configured");
-  // TODO: Implement this by calling a transport API 
-  if (postcode.startsWith("SW1A")) { 
+  // const transportApiKey = process.env.TRANSPORT_API_KEY;
+  // if (!transportApiKey) console.warn("Transport API Key not configured. Using mock data.");
+
+  // In a real application:
+  // 1. Geocode the postcode to get latitude/longitude.
+  // 2. Use these coordinates to query a transport API.
+  //    - Example (TransportAPI - requires registration and key):
+  //      `https://transportapi.com/v3/uk/places.json?lat={lat}&lon={lon}&type=bus_stop,train_station&app_id={APP_ID}&app_key={API_KEY}`
+  //    - Example (Google Maps Places API - Nearby Search, requires API key and billing):
+  //      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={lat},{lon}&radius=1500&type=bus_station|train_station|subway_station&key={YOUR_API_KEY}`
+  // 3. Parse the API response to create TransportLink objects.
+  // 4. For journey times, you might need to use a Directions API.
+
+  // Mock data based on postcode prefix (simplified)
+  if (postcode.startsWith("SW1A")) { // Central London example
     return [
       { type: "Train Station", name: "Charing Cross Station", distanceMiles: 0.5, journeyTimeToHub: "Various London Termini" },
       { type: "Tube Station", name: "Westminster Station", distanceMiles: 0.3, journeyTimeToHub: "Multiple Lines" },
       { type: "Bus Stop", name: "Trafalgar Square (Stop T)", distanceMiles: 0.2 },
       { type: "Motorway Access", name: "M4 J1 (via A4)", distanceMiles: 8.0 },
     ];
-  } else if (postcode.startsWith("M1")) { 
+  } else if (postcode.startsWith("M1")) { // Manchester example
      return [
       { type: "Train Station", name: "Manchester Piccadilly", distanceMiles: 1.2, journeyTimeToHub: "London Euston: 2hr 10m" },
       { type: "Tram Stop", name: "Piccadilly Gardens Metrolink", distanceMiles: 1.0 },
@@ -566,6 +586,7 @@ export async function getTransportLinks(postcode: string): Promise<TransportLink
       { type: "Motorway Access", name: "M602 J3", distanceMiles: 2.5 },
     ];
   }
+  // Generic mock data
   return [ 
     { type: "Train Station", name: "Local Mainline Station", distanceMiles: 2.1, journeyTimeToHub: "City Centre: 25 mins" },
     { type: "Bus Stop", name: "High Street (Stop B)", distanceMiles: 0.4 },
@@ -580,24 +601,34 @@ export interface AdministrativeBoundaries {
   latitude: number;
   longitude: number;
   localAuthority: string;
-  council: string;
-  constituency: string;
-  ward: string;
-  country: string;
+  council: string; // Often same as local authority in UK unitary authorities
+  constituency: string; // Parliamentary constituency
+  ward: string; // Local council ward
+  country: string; // e.g., England, Scotland, Wales, Northern Ireland
 }
 
 /**
  * Retrieves administrative boundaries for a given postcode using a service like MapIt.
+ * This is a mock implementation. Real-life data would require integrating with MapIt API or similar.
  * @param postcode The postcode to search for.
  * @returns A promise that resolves to AdministrativeBoundaries or null if not found.
  */
 export async function getAdministrativeBoundaries(postcode: string): Promise<AdministrativeBoundaries | null> {
-  // const apiKey = process.env.MAPIT_API_KEY; // Or specific API key for MapIt service
-  // if (!apiKey) console.warn("MapIt API Key not configured");
-  // TODO: Implement by calling an API like MapIt 
+  // const mapitApiKey = process.env.MAPIT_API_KEY;
+  // if (!mapitApiKey) console.warn("MapIt API Key not configured. Using mock data.");
+  
+  // In a real application:
+  // 1. Construct URL for MapIt API: `https://mapit.mysociety.org/postcode/{POSTCODE}.json?api_key={YOUR_API_KEY}`
+  // 2. Fetch data from the API.
+  // 3. Parse the JSON response to extract relevant fields (e.g., WGS84_lat, WGS84_lon, areas).
+  //    MapIt returns areas with types like 'LBO' (London Borough), 'CTY' (County), 'DIS' (District),
+  //    'WMC' (Westminster Constituency), 'EUR' (European Electoral Region - less relevant now), etc.
+  //    You'll need to map these to the fields in the AdministrativeBoundaries interface.
+
+  // Mock data based on postcode prefix (simplified)
   const normalizedPostcode = postcode.toUpperCase().replace(/\s+/g, '');
 
-  if (normalizedPostcode === 'SW1A1AA') { 
+  if (normalizedPostcode === 'SW1A1AA') { // Buckingham Palace
     return {
       latitude: 51.5014,
       longitude: -0.1419,
@@ -607,7 +638,7 @@ export async function getAdministrativeBoundaries(postcode: string): Promise<Adm
       ward: 'St James\'s',
       country: 'England',
     };
-  } else if (normalizedPostcode === 'M11AE') { 
+  } else if (normalizedPostcode === 'M11AE') { // Central Manchester
     return {
       latitude: 53.4765,
       longitude: -2.2309,
@@ -617,7 +648,7 @@ export async function getAdministrativeBoundaries(postcode: string): Promise<Adm
       ward: 'Piccadilly',
       country: 'England',
     };
-  } else if (normalizedPostcode.startsWith('EH1')) { 
+  } else if (normalizedPostcode.startsWith('EH1')) { // Central Edinburgh
      return {
       latitude: 55.9500,
       longitude: -3.1890,
@@ -629,8 +660,9 @@ export async function getAdministrativeBoundaries(postcode: string): Promise<Adm
     };
   }
 
+  // Generic mock data
   return {
-    latitude: 52.4797 + (Math.random() * 0.1 - 0.05), 
+    latitude: 52.4797 + (Math.random() * 0.1 - 0.05), // Randomish coords near Birmingham
     longitude: -1.90269 + (Math.random() * 0.1 - 0.05),
     localAuthority: 'Generic District Council',
     council: 'Generic County Council',
@@ -644,54 +676,57 @@ export async function getAdministrativeBoundaries(postcode: string): Promise<Adm
 /** Represents tree coverage data */
 export interface TreeCoverageData {
   coveragePercentage: number;
-  dominantSpecies?: string[];
-  lastUpdated: string;
+  dominantSpecies?: string[]; // e.g., ["Oak", "Ash"]
+  lastUpdated: string; // ISO date string
   sourceUrl?: string;
 }
 
 /**
  * Retrieves tree coverage data for a given postcode or area.
+ * Mock implementation. Real data might come from sources like Forest Research (UK) or Copernicus Land Monitoring Service (Europe).
  * @param postcode The postcode to search for.
  * @returns A promise that resolves to TreeCoverageData or null.
  */
 export async function getTreeCoverageData(postcode: string): Promise<TreeCoverageData | null> {
-  // const apiKey = process.env.TREE_API_KEY; 
-  // if (!apiKey) console.warn("Tree API Key not configured");
-  // TODO: Integrate with a real API for tree coverage 
+  // const treeApiKey = process.env.TREE_API_KEY; 
+  // if (!treeApiKey) console.warn("Tree API Key not configured. Using mock data.");
+  // TODO: Integrate with a real API for tree coverage if available and suitable for free use.
+  // For example, some local councils might publish tree data.
   return {
-    coveragePercentage: parseFloat((Math.random() * 30 + 5).toFixed(1)), 
+    coveragePercentage: parseFloat((Math.random() * 30 + 5).toFixed(1)), // Random percentage between 5% and 35%
     dominantSpecies: [['Oak', 'Ash', 'Beech'], ['Pine', 'Birch'], ['Sycamore', 'Lime']][Math.floor(Math.random() * 3)],
     lastUpdated: new Date(new Date().getFullYear() - Math.floor(Math.random() * 2), Math.floor(Math.random() * 12), 1).toISOString(),
-    sourceUrl: 'https://www.forestresearch.gov.uk/tools-and-resources/urban-tree-cover-map/' 
+    sourceUrl: 'https://www.forestresearch.gov.uk/tools-and-resources/urban-tree-cover-map/' // Example source
   };
 }
 
 /** Represents soil type data */
 export interface SoilTypeData {
-  primarySoilType: string;
-  soilPh?: number; 
-  drainageClass?: string; 
-  agriculturalPotential?: string; 
+  primarySoilType: string; // e.g., "Loamy", "Clayey", "Sandy"
+  soilPh?: number; // e.g., 6.5
+  drainageClass?: string; // e.g., "Well-drained", "Poorly-drained"
+  agriculturalPotential?: string; // e.g., "Grade 1", "Grade 3b"
   sourceUrl?: string;
 }
 
 /**
  * Retrieves soil type data for a given postcode or area.
+ * Mock implementation. Real data from sources like UKSO (UK Soil Observatory) or EU Soil Data Centre.
  * @param postcode The postcode to search for.
  * @returns A promise that resolves to SoilTypeData or null.
  */
 export async function getSoilTypeData(postcode: string): Promise<SoilTypeData | null> {
-  // const apiKey = process.env.SOIL_API_KEY; 
-  // if (!apiKey) console.warn("Soil API Key not configured");
-  // TODO: Integrate with a real API for soil data 
+  // const soilApiKey = process.env.SOIL_API_KEY; 
+  // if (!soilApiKey) console.warn("Soil API Key not configured. Using mock data.");
+  // TODO: Integrate with a real API for soil data. Many are complex geospatial datasets.
   const soilTypes = ['Loamy', 'Clay', 'Sandy', 'Peaty', 'Chalky', 'Silty'];
   const drainage = ['Well-drained', 'Moderately well-drained', 'Poorly-drained', 'Very poorly-drained'];
   return {
     primarySoilType: soilTypes[Math.floor(Math.random() * soilTypes.length)],
-    soilPh: parseFloat((Math.random() * 3 + 5.5).toFixed(1)), 
+    soilPh: parseFloat((Math.random() * 3 + 5.5).toFixed(1)), // pH between 5.5 and 8.5
     drainageClass: drainage[Math.floor(Math.random() * drainage.length)],
-    agriculturalPotential: `Grade ${Math.floor(Math.random()*3)+1}${['a','b',''][Math.floor(Math.random()*3)]}`,
-    sourceUrl: 'http://www.landis.org.uk/services/ukso.cfm' 
+    agriculturalPotential: `Grade ${Math.floor(Math.random()*3)+1}${['a','b',''][Math.floor(Math.random()*3)]}`, // e.g. Grade 1, 2a, 3b
+    sourceUrl: 'http://www.landis.org.uk/services/ukso.cfm' // Example source
   };
 }
 
@@ -699,52 +734,54 @@ export async function getSoilTypeData(postcode: string): Promise<SoilTypeData | 
 export interface WaterSourceData {
   nearestRiverName?: string;
   nearestRiverDistanceKm?: number;
-  groundwaterAvailability?: string; 
-  waterQuality?: string; 
+  groundwaterAvailability?: string; // e.g., "High", "Moderate", "Low"
+  waterQuality?: string; // e.g., "Good", "Fair", "Poor" (referring to local water bodies)
   sourceUrl?: string;
 }
 
 /**
  * Retrieves water source data for a given postcode or area.
+ * Mock implementation. Real data from Environment Agency (UK) or SEPA (Scotland).
  * @param postcode The postcode to search for.
  * @returns A promise that resolves to WaterSourceData or null.
  */
 export async function getWaterSourceData(postcode: string): Promise<WaterSourceData | null> {
-  // const apiKey = process.env.WATER_API_KEY; 
-  // if (!apiKey) console.warn("Water API Key not configured");
-  // TODO: Integrate with a real API for water sources 
+  // const waterApiKey = process.env.WATER_API_KEY; 
+  // if (!waterApiKey) console.warn("Water API Key not configured. Using mock data.");
+  // TODO: Integrate with APIs like Environment Agency's Catchment Data Explorer.
   const rivers = ['River Thames', 'River Severn', 'River Trent', 'River Ouse', 'Local Brook'];
   return {
     nearestRiverName: rivers[Math.floor(Math.random() * rivers.length)],
-    nearestRiverDistanceKm: parseFloat((Math.random() * 5 + 0.5).toFixed(1)), 
+    nearestRiverDistanceKm: parseFloat((Math.random() * 5 + 0.5).toFixed(1)), // Distance 0.5 to 5.5 km
     groundwaterAvailability: ['High', 'Moderate', 'Low'][Math.floor(Math.random() * 3)],
     waterQuality: ['Good', 'Fair', 'Poor'][Math.floor(Math.random() * 3)],
-    sourceUrl: 'https://environment.data.gov.uk/catchment-planning/' 
+    sourceUrl: 'https://environment.data.gov.uk/catchment-planning/' // Example source
   };
 }
 
 /** Represents nearby industrial activity data */
 export interface IndustrialActivityData {
   hasMajorIndustrialZones: boolean;
-  majorActivities?: string[]; 
-  proximityToSensitiveSitesKm?: number; 
+  majorActivities?: string[]; // e.g., ["Manufacturing", "Logistics"]
+  proximityToSensitiveSitesKm?: number; // Distance to nearest sensitive site (e.g., school, hospital)
   sourceUrl?: string;
 }
 
 /**
  * Retrieves nearby industrial activity data for a given postcode or area.
+ * Mock implementation. Real data from local council planning portals or specific industrial datasets.
  * @param postcode The postcode to search for.
  * @returns A promise that resolves to IndustrialActivityData or null.
  */
 export async function getIndustrialActivityData(postcode: string): Promise<IndustrialActivityData | null> {
-  // const apiKey = process.env.INDUSTRIAL_API_KEY; 
-  // if (!apiKey) console.warn("Industrial API Key not configured");
-  // TODO: Integrate with real APIs or datasets 
-  const hasZones = Math.random() > 0.6;
+  // const industrialApiKey = process.env.INDUSTRIAL_API_KEY; 
+  // if (!industrialApiKey) console.warn("Industrial API Key not configured. Using mock data.");
+  // TODO: Integrate with real APIs or datasets, which can be very specific and localized.
+  const hasZones = Math.random() > 0.6; // 40% chance of having major industrial zones nearby
   return {
     hasMajorIndustrialZones: hasZones,
     majorActivities: hasZones ? [['Manufacturing', 'Logistics'], ['Chemical Processing'], ['Warehousing', 'Distribution']][Math.floor(Math.random()*3)] : undefined,
-    proximityToSensitiveSitesKm: hasZones ? parseFloat((Math.random() * 2 + 0.5).toFixed(1)) : undefined, 
-    sourceUrl: 'https://www.gov.uk/government/collections/industrial-strategy-building-a-britain-fit-for-the-future' 
+    proximityToSensitiveSitesKm: hasZones ? parseFloat((Math.random() * 2 + 0.5).toFixed(1)) : undefined, // Distance 0.5 to 2.5 km if zones exist
+    sourceUrl: 'https://www.gov.uk/government/collections/industrial-strategy-building-a-britain-fit-for-the-future' // General example source
   };
 }

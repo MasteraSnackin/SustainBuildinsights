@@ -45,8 +45,9 @@ export function TransportLinks({ transportLinks, isLoading }: TransportLinksProp
         <p className="text-sm text-muted-foreground">No transport link data available for this location.</p>
       )}
       <p className="text-xs text-muted-foreground mt-4">
-        Citation: [17] Transport Links API (mock data). Actual data may require specialized transport APIs.
+        Citation: [17] Transport Links API (mock data). Real-life data integration would require specific API keys (e.g., TransportAPI, Google Maps) and potentially involve costs and more complex setup.
       </p>
     </ReportSection>
   );
 }
+
