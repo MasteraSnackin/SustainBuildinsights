@@ -4,7 +4,7 @@ import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarTrigger } 
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import Image from 'next/image'; // Added import
+import Image from 'next/image';
 
 export default function Home() {
   return (
@@ -21,10 +21,9 @@ export default function Home() {
           </div>
         </SidebarHeader>
         <SidebarContent className="p-2 group-data-[collapsible=icon]:p-0">
-          {/* Sidebar content can go here if needed, e.g., navigation or saved reports */}
            <div className="p-2 group-data-[collapsible=icon]:hidden">
             <p className="text-xs text-sidebar-foreground/70">
-              Generate detailed property reports.
+              Generate detailed property reports and chat with our AI assistant.
             </p>
           </div>
         </SidebarContent>
@@ -36,7 +35,7 @@ export default function Home() {
           <h1 className="text-xl font-semibold text-foreground">Redevelopment Potential Report</h1>
         </header>
         <ScrollArea className="flex-1">
-          <main className="p-4 md:p-6 lg:p-8">
+          <main className="p-4 md:p-6 lg:p-8 max-w-none"> {/* Allow wider content */}
             <PropertyInsightsDashboard />
           </main>
         </ScrollArea>

@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertTriangle } from 'lucide-react';
-import Image from 'next/image'; // Added import
+import Image from 'next/image';
 
 import { ExecutiveSummary } from './property-insights/executive-summary';
 import { ValuationMarketAnalysis } from './property-insights/valuation-market-analysis';
@@ -21,6 +21,7 @@ import { CaseStudies } from './property-insights/case-studies';
 import { EnergyClimateEnvironment } from './property-insights/energy-climate-environment';
 import { TransportLinks } from './property-insights/transport-links';
 import { MapLocation } from './property-insights/map-location';
+import { ReportChatbot } from './property-insights/report-chatbot';
 
 
 import {
@@ -28,7 +29,7 @@ import {
   getConservationAreas, getSchools, getCrimeRates, getDemographics,
   getStampDuty, getRentEstimates, getSoldPricesFloorArea, getRentalComparables,
   getEpcData, getFloodRiskData, getAirQualityData, getHistoricalClimateData, getTransportLinks,
-  type AskingPrice, type SoldPrice, type PriceTrends as PriceTrendData, type PlanningApplication, // Renamed PriceTrends to avoid conflict
+  type AskingPrice, type SoldPrice, type PriceTrends as PriceTrendData, type PlanningApplication,
   type ConservationArea, type School, type CrimeRates as CrimeRatesData, type Demographics as DemographicsData,
   type StampDuty as StampDutyData, type RentEstimates as RentEstimatesData, type SoldPricesFloorArea as SoldPricesFloorAreaData, type RentalComparables as RentalComparablesData,
   type EpcData as EpcApiData, type FloodRiskData as FloodRiskApiData, type AirQualityData as AirQualityApiData, type HistoricalClimateData as HistoricalClimateApiData, type TransportLink
@@ -157,9 +158,6 @@ export function PropertyInsightsDashboard() {
       
       const executiveSummaryInput: GenerateExecutiveSummaryInput = {
         postcode: data.postcode,
-        // Property price is removed from input to the AI flow as per request.
-        // The AI prompt will need to be adjusted if it relied heavily on a specific user-inputted price.
-        // For now, we assume the AI can infer market context from other data points or use a general assessment.
       };
       const summaryOutput = await generateExecutiveSummary(executiveSummaryInput);
       setExecutiveSummary(summaryOutput);
@@ -243,6 +241,7 @@ export function PropertyInsightsDashboard() {
       {isAnyDataAvailable && (
         <div className="space-y-8">
           <ExecutiveSummary summaryData={executiveSummary} isLoading={isLoading && !executiveSummary} />
+          <ReportChatbot executiveSummaryText={executiveSummary?.summary ?? null} isReportLoading={isLoading && !executiveSummary} />
           <MapLocation postcode={submittedPostcode} isLoading={isLoading && !submittedPostcode} />
           <ValuationMarketAnalysis
             askingPrices={askingPrices}
@@ -275,7 +274,7 @@ export function PropertyInsightsDashboard() {
           <FinancialFeasibility
             stampDuty={stampDuty}
             rentEstimates={rentEstimates}
-            propertyPrice={submittedPropertyPrice} // Use the mock/default price for calculations
+            propertyPrice={submittedPropertyPrice} 
             isLoading={isLoading && (!stampDuty || !rentEstimates)}
           />
           <CaseStudies
@@ -296,4 +295,3 @@ export function PropertyInsightsDashboard() {
     </div>
   );
 }
-
