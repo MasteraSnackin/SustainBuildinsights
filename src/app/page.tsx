@@ -45,16 +45,17 @@ export default function Home() {
             </p>
           </div>
           <SidebarSeparator className="my-2 group-data-[collapsible=icon]:hidden" />
-          <div className="flex-1 overflow-y-auto group-data-[collapsible=icon]:hidden">
+          <div className="flex-1 overflow-y-auto group-data-[collapsible=icon]:hidden p-2 space-y-4">
              <ReportChatbot 
               executiveSummaryText={executiveSummaryText} 
               isReportLoading={isReportLoading}
               // You might want to pass more context if the chatbot needs it
               // For example, the postcode: chatbotContextPostcode
             />
+            {isReportAvailable && <ReportActions reportContent={executiveSummaryText} />}
           </div>
            <div className="p-2 mt-auto group-data-[collapsible=icon]:hidden">
-             <p className="text-xs text-sidebar-foreground/50">Chatbot interacts with the generated executive summary.</p>
+             <p className="text-xs text-sidebar-foreground/50">Interact with the generated report summary using the tools above.</p>
            </div>
         </SidebarContent>
       </Sidebar>
@@ -66,7 +67,6 @@ export default function Home() {
         </header>
         <ScrollArea className="flex-1">
           <main className="lg:max-w-7xl xl:max-w-none"> {/* Removed p-4 md:p-6 lg:p-8 as dashboard has its own padding */}
-            {isReportAvailable && <ReportActions reportContent={executiveSummaryText} />}
             <PropertyInsightsDashboard 
               onSummaryGenerated={setExecutiveSummaryText}
               onLoadingChange={setIsReportLoading}
@@ -78,4 +78,3 @@ export default function Home() {
     </div>
   );
 }
-

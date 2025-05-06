@@ -200,7 +200,7 @@ export function ReportActions({ reportContent }: ReportActionsProps) {
   }
 
   return (
-    <Card className="mb-6 shadow-md sticky top-[57px] z-5 bg-background/95 backdrop-blur-sm">
+    <Card className="shadow-md">
       <CardHeader className="pb-2 pt-3 px-4">
         <CardTitle className="text-lg font-medium text-primary">Report Actions</CardTitle>
       </CardHeader>
