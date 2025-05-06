@@ -2,10 +2,16 @@
 'use client';
 
 import { ReportSection, DataDisplay, DataListDisplay } from './report-section';
-import { Thermometer, Droplets, Wind, Zap, ShieldCheck, Leaf, Sun, WindIcon, Trees, Mountain, CloudRainWind, Factory } from 'lucide-react';
+import {
+  Thermometer, Droplets, Wind, Zap, Leaf, Sun, WindIcon, Trees, Mountain, CloudRainWind, Factory,
+  ShieldCheck, ShieldAlert, AlertTriangle, TrendingUp, TrendingDown, Minus, Waves, LayersIcon, TestTube2, Sprout, Info
+} from 'lucide-react';
 import type { EpcData, FloodRiskData, AirQualityData, HistoricalClimateData, TreeCoverageData, SoilTypeData, WaterSourceData, IndustrialActivityData } from '@/services/patma';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+
 
 interface EnergyClimateEnvironmentProps {
   epcData: EpcData | null;
@@ -33,16 +39,48 @@ const getEpcRatingColor = (rating?: string): string => {
   }
 };
 
-const getAqiCategoryColor = (category?: string): string => {
-  if (!category) return 'text-muted-foreground';
+const getAqiCategoryStyle = (category?: string): { color: string, bgColor: string, icon: JSX.Element } => {
+  if (!category) return { color: 'text-muted-foreground', bgColor: 'bg-muted', icon: <Info className="h-4 w-4" /> };
   switch (category.toLowerCase()) {
-    case 'good': return 'text-green-600';
-    case 'moderate': return 'text-yellow-600';
-    case 'unhealthy for sensitive groups': return 'text-orange-600';
-    case 'unhealthy': return 'text-red-600';
-    case 'very unhealthy': return 'text-purple-600';
-    case 'hazardous': return 'text-maroon-600'; // Assuming a maroon color exists or define it
-    default: return 'text-muted-foreground';
+    case 'good': return { color: 'text-green-700', bgColor: 'bg-green-100', icon: <ShieldCheck className="h-4 w-4 text-green-600" /> };
+    case 'moderate': return { color: 'text-yellow-700', bgColor: 'bg-yellow-100', icon: <ShieldCheck className="h-4 w-4 text-yellow-600" /> };
+    case 'unhealthy for sensitive groups': return { color: 'text-orange-700', bgColor: 'bg-orange-100', icon: <AlertTriangle className="h-4 w-4 text-orange-600" /> };
+    case 'unhealthy': return { color: 'text-red-700', bgColor: 'bg-red-100', icon: <ShieldAlert className="h-4 w-4 text-red-600" /> };
+    case 'very unhealthy': return { color: 'text-purple-700', bgColor: 'bg-purple-100', icon: <ShieldAlert className="h-4 w-4 text-purple-600" /> };
+    case 'hazardous': return { color: 'text-red-800', bgColor: 'bg-red-200', icon: <ShieldAlert className="h-4 w-4 text-red-700" /> }; // Assuming a maroon color exists or define it
+    default: return { color: 'text-muted-foreground', bgColor: 'bg-muted', icon: <Info className="h-4 w-4" /> };
+  }
+};
+
+const getRiskVisuals = (level?: string | null): { text: string, Icon: React.ElementType, colorClass: string, badgeVariant: "default" | "secondary" | "destructive" | "outline" } => {
+  if (!level) level = "Unknown";
+  switch (level.toLowerCase()) {
+    case 'very low': return { text: 'Very Low', Icon: ShieldCheck, colorClass: 'text-green-600', badgeVariant: 'secondary' };
+    case 'low': return { text: 'Low', Icon: ShieldCheck, colorClass: 'text-yellow-600', badgeVariant: 'secondary' };
+    case 'medium': return { text: 'Medium', Icon: AlertTriangle, colorClass: 'text-orange-600', badgeVariant: 'default' };
+    case 'high': return { text: 'High', Icon: ShieldAlert, colorClass: 'text-red-600', badgeVariant: 'destructive' };
+    default: return { text: level || 'N/A', Icon: Info, colorClass: 'text-muted-foreground', badgeVariant: 'outline' };
+  }
+};
+
+const getDrainageVisuals = (drainage?: string | null): { text: string, Icon: React.ElementType, colorClass: string } => {
+  if(!drainage) drainage = "Unknown";
+  switch (drainage.toLowerCase()) {
+    case 'well-drained': return { text: 'Well-drained', Icon: TrendingUp, colorClass: 'text-green-600' };
+    case 'moderately well-drained': return { text: 'Moderately Well-drained', Icon: Minus, colorClass: 'text-yellow-600' };
+    case 'poorly-drained': return { text: 'Poorly-drained', Icon: TrendingDown, colorClass: 'text-orange-600' };
+    case 'very poorly-drained': return { text: 'Very Poorly-drained', Icon: TrendingDown, colorClass: 'text-red-600' };
+    default: return { text: drainage || 'N/A', Icon: Info, colorClass: 'text-muted-foreground' };
+  }
+};
+
+const getWaterQualityVisuals = (quality?: string | null): { text: string, Icon: React.ElementType, colorClass: string } => {
+  if(!quality) quality = "Unknown";
+  switch (quality.toLowerCase()) {
+    case 'good': return { text: 'Good', Icon: ShieldCheck, colorClass: 'text-green-600' };
+    case 'fair': return { text: 'Fair', Icon: ShieldCheck, colorClass: 'text-yellow-600' }; // Shield can be an option too
+    case 'poor': return { text: 'Poor', Icon: ShieldAlert, colorClass: 'text-red-600' };
+    default: return { text: quality || 'N/A', Icon: Info, colorClass: 'text-muted-foreground' };
   }
 };
 
@@ -105,16 +143,35 @@ export function EnergyClimateEnvironment({
         {/* Flood Risk Section */}
         <div>
           <h3 className="text-lg font-medium text-foreground mb-2 flex items-center">
-            <ShieldCheck className="mr-2 h-5 w-5 text-accent" />Flood Risk
+            <Waves className="mr-2 h-5 w-5 text-accent" />Flood Risk
           </h3>
           {floodRiskData ? (
             <Card>
-              <CardContent className="pt-6">
-                <DataDisplay label="Rivers and Sea" value={floodRiskData.riversAndSea} />
-                <DataDisplay label="Surface Water" value={floodRiskData.surfaceWater} />
-                {floodRiskData.reservoirs && <DataDisplay label="Reservoirs" value={floodRiskData.reservoirs} />}
+              <CardHeader>
+                 <CardTitle>Flood Risk Assessment</CardTitle>
+                 <CardDescription>Risk levels from various sources for the area.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {(['riversAndSea', 'surfaceWater', 'reservoirs'] as const).map(source => {
+                  const risk = floodRiskData[source];
+                  const visuals = getRiskVisuals(risk);
+                  const label = source.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                  if (risk === undefined && source === 'reservoirs') return null; // Only render reservoirs if data exists
+
+                  return (
+                    <div key={source} className="flex items-center justify-between p-3 bg-card rounded-md border">
+                      <div className="flex items-center">
+                        <visuals.Icon className={cn("mr-2 h-5 w-5", visuals.colorClass)} />
+                        <span className="font-medium">{label}</span>
+                      </div>
+                      <Badge variant={visuals.badgeVariant} className={cn(visuals.colorClass, visuals.badgeVariant === "destructive" ? "text-destructive-foreground" : "")}>
+                        {visuals.text}
+                      </Badge>
+                    </div>
+                  );
+                })}
                 {floodRiskData.detailsUrl && (
-                  <a href={floodRiskData.detailsUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline mt-2 block">
+                  <a href={floodRiskData.detailsUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline mt-2 block pt-2">
                     Check detailed flood risk information
                   </a>
                 )}
@@ -129,18 +186,26 @@ export function EnergyClimateEnvironment({
         {/* Air Quality Section */}
         <div>
           <h3 className="text-lg font-medium text-foreground mb-2 flex items-center">
-            <WindIcon className="mr-2 h-5 w-5 text-accent" />Air Quality
+            <WindIcon className="mr-2 h-5 w-5 text-accent" />Air Quality Index (AQI)
           </h3>
           {airQualityData ? (
              <Card>
-               <CardContent className="pt-6">
-                <DataDisplay label="Air Quality Index (AQI)" value={airQualityData.aqi} />
-                <DataDisplay label="Category" value={airQualityData.category} />
-                {airQualityData.dominantPollutant && <DataDisplay label="Dominant Pollutant" value={airQualityData.dominantPollutant} />}
-                <p className={`text-lg font-semibold ${getAqiCategoryColor(airQualityData.category)}`}>
-                  Overall: {airQualityData.category} (AQI: {airQualityData.aqi})
-                </p>
-                <p className="text-xs text-muted-foreground">Last Updated: {new Date(airQualityData.lastUpdated).toLocaleString()}</p>
+               <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>AQI: {airQualityData.aqi}</span>
+                    <Badge className={cn("text-sm", getAqiCategoryStyle(airQualityData.category).bgColor, getAqiCategoryStyle(airQualityData.category).color)}>
+                      {getAqiCategoryStyle(airQualityData.category).icon}
+                      <span className="ml-1">{airQualityData.category}</span>
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    Dominant Pollutant: {airQualityData.dominantPollutant || 'N/A'} | Last Updated: {new Date(airQualityData.lastUpdated).toLocaleString()}
+                  </CardDescription>
+               </CardHeader>
+               <CardContent>
+                 <p className="text-sm text-muted-foreground">
+                    Air Quality Index (AQI) indicates the level of air pollution. Lower values are better.
+                 </p>
                </CardContent>
              </Card>
           ) : (
@@ -204,17 +269,46 @@ export function EnergyClimateEnvironment({
         {/* Soil Type Data Section */}
         <div>
           <h3 className="text-lg font-medium text-foreground mb-2 flex items-center">
-            <Mountain className="mr-2 h-5 w-5 text-accent" />Soil Type
+            <LayersIcon className="mr-2 h-5 w-5 text-accent" />Soil Characteristics
           </h3>
           {soilTypeData ? (
             <Card>
-              <CardContent className="pt-6">
-                <DataDisplay label="Primary Soil Type" value={soilTypeData.primarySoilType} />
-                <DataDisplay label="Soil pH" value={soilTypeData.soilPh} />
-                <DataDisplay label="Drainage Class" value={soilTypeData.drainageClass} />
-                 {soilTypeData.agriculturalPotential && <DataDisplay label="Agricultural Potential" value={soilTypeData.agriculturalPotential} />}
+              <CardHeader>
+                <CardTitle>Soil Profile: {soilTypeData.primarySoilType}</CardTitle>
+                <CardDescription>Key soil properties for the area.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-card rounded-md border">
+                    <div className="flex items-center">
+                        <Sprout className="mr-2 h-5 w-5 text-green-600" />
+                        <span className="font-medium">Primary Soil Type</span>
+                    </div>
+                    <Badge variant="outline">{soilTypeData.primarySoilType || 'N/A'}</Badge>
+                </div>
+                 <div className="flex items-center justify-between p-3 bg-card rounded-md border">
+                    <div className="flex items-center">
+                        <TestTube2 className="mr-2 h-5 w-5 text-blue-600" />
+                        <span className="font-medium">Soil pH</span>
+                    </div>
+                    <Badge variant="outline">{soilTypeData.soilPh?.toFixed(1) || 'N/A'}</Badge>
+                </div>
+                 <div className="flex items-center justify-between p-3 bg-card rounded-md border">
+                    <div className="flex items-center">
+                        <getDrainageVisuals.Icon className={cn("mr-2 h-5 w-5", getDrainageVisuals(soilTypeData.drainageClass).colorClass)} />
+                        <span className="font-medium">Drainage Class</span>
+                    </div>
+                    <Badge variant="outline" className={getDrainageVisuals(soilTypeData.drainageClass).colorClass}>{getDrainageVisuals(soilTypeData.drainageClass).text}</Badge>
+                </div>
+                 <div className="flex items-center justify-between p-3 bg-card rounded-md border">
+                    <div className="flex items-center">
+                        <Leaf className="mr-2 h-5 w-5 text-lime-600" />
+                        <span className="font-medium">Agricultural Potential</span>
+                    </div>
+                    <Badge variant="outline">{soilTypeData.agriculturalPotential || 'N/A'}</Badge>
+                </div>
+
                 {soilTypeData.sourceUrl && (
-                  <a href={soilTypeData.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline mt-2 block">
+                  <a href={soilTypeData.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline mt-2 block pt-2">
                     View soil data source
                   </a>
                 )}
@@ -229,16 +323,38 @@ export function EnergyClimateEnvironment({
         {/* Water Source Data Section */}
         <div>
           <h3 className="text-lg font-medium text-foreground mb-2 flex items-center">
-            <Droplets className="mr-2 h-5 w-5 text-accent" />Water Sources
+            <Droplets className="mr-2 h-5 w-5 text-accent" />Water Sources & Quality
           </h3>
           {waterSourceData ? (
             <Card>
-              <CardContent className="pt-6">
-                <DataDisplay label="Nearest Major River" value={waterSourceData.nearestRiverName} unit={waterSourceData.nearestRiverDistanceKm ? `${waterSourceData.nearestRiverDistanceKm} km` : undefined} />
-                <DataDisplay label="Groundwater Availability" value={waterSourceData.groundwaterAvailability} />
-                <DataDisplay label="Water Quality" value={waterSourceData.waterQuality} />
+              <CardHeader>
+                  <CardTitle>Local Water Environment</CardTitle>
+                  <CardDescription>Information on nearby water bodies and groundwater.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-card rounded-md border">
+                    <div className="flex items-center">
+                        <Waves className="mr-2 h-5 w-5 text-blue-500" />
+                        <span className="font-medium">Nearest Major River</span>
+                    </div>
+                    <Badge variant="outline">{waterSourceData.nearestRiverName || 'N/A'} ({waterSourceData.nearestRiverDistanceKm?.toFixed(1) || 'N/A'} km)</Badge>
+                </div>
+                 <div className="flex items-center justify-between p-3 bg-card rounded-md border">
+                    <div className="flex items-center">
+                        <LayersIcon className="mr-2 h-5 w-5 text-cyan-600" />
+                        <span className="font-medium">Groundwater Availability</span>
+                    </div>
+                    <Badge variant="outline">{waterSourceData.groundwaterAvailability || 'N/A'}</Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-card rounded-md border">
+                    <div className="flex items-center">
+                        <getWaterQualityVisuals.Icon className={cn("mr-2 h-5 w-5", getWaterQualityVisuals(waterSourceData.waterQuality).colorClass)} />
+                        <span className="font-medium">Local Water Quality</span>
+                    </div>
+                     <Badge variant="outline" className={getWaterQualityVisuals(waterSourceData.waterQuality).colorClass}>{getWaterQualityVisuals(waterSourceData.waterQuality).text}</Badge>
+                </div>
                 {waterSourceData.sourceUrl && (
-                  <a href={waterSourceData.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline mt-2 block">
+                  <a href={waterSourceData.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline mt-2 block pt-2">
                     View water source data
                   </a>
                 )}
