@@ -1,4 +1,3 @@
-
 'use client';
 
 import type {SVGProps} from 'react';
@@ -23,6 +22,7 @@ export function ReportActions({ reportContent }: ReportActionsProps) {
   const [isPodcastLoading, setIsPodcastLoading] = useState(false);
   const [podcastAudioUrl, setPodcastAudioUrl] = useState<string | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement>(null);
+  const [isPodcastPlaying, setIsPodcastPlaying] = useState(false);
 
 
   useEffect(() => {
@@ -71,6 +71,7 @@ export function ReportActions({ reportContent }: ReportActionsProps) {
   useEffect(() => {
     setPodcastAudioUrl(null);
     setIsPodcastLoading(false);
+    setIsPodcastPlaying(false);
     if (audioPlayerRef.current) {
       audioPlayerRef.current.pause();
       audioPlayerRef.current.src = '';
@@ -124,7 +125,7 @@ export function ReportActions({ reportContent }: ReportActionsProps) {
       toast({ title: 'Error', description: 'No report content to convert.', variant: 'destructive' });
       return;
     }
-    if (podcastAudioUrl) { // If already generated, just play or clear
+    if (podcastAudioUrl) { 
       if (audioPlayerRef.current) {
         if (audioPlayerRef.current.paused) {
           audioPlayerRef.current.play().catch(e => console.error("Error playing audio:", e));
@@ -137,18 +138,13 @@ export function ReportActions({ reportContent }: ReportActionsProps) {
 
     setIsPodcastLoading(true);
     setPodcastAudioUrl(null);
+    setIsPodcastPlaying(false);
 
     try {
       const input: GeneratePodcastAudioInput = { text: reportContent };
       const response = await generatePodcastAudio(input);
       setPodcastAudioUrl(response.audioDataUri);
       toast({ title: 'Podcast Ready', description: 'Your podcast audio has been generated.' });
-      // Automatically play once loaded
-      if (audioPlayerRef.current) {
-          // audioPlayerRef.current.load(); // src is updated, load should happen
-          // audioPlayerRef.current.play().catch(e => console.error("Error auto-playing audio:", e));
-      }
-
     } catch (error) {
       console.error('Error generating podcast audio:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -165,6 +161,7 @@ export function ReportActions({ reportContent }: ReportActionsProps) {
   
   const clearPodcast = () => {
     setPodcastAudioUrl(null);
+    setIsPodcastPlaying(false);
     if(audioPlayerRef.current) {
       audioPlayerRef.current.pause();
       audioPlayerRef.current.src = '';
@@ -195,6 +192,32 @@ export function ReportActions({ reportContent }: ReportActionsProps) {
   };
 
 
+  useEffect(() => {
+    const audioEl = audioPlayerRef.current;
+    if (audioEl) {
+      const handlePlay = () => setIsPodcastPlaying(true);
+      const handlePause = () => setIsPodcastPlaying(false);
+      const handleEnded = () => setIsPodcastPlaying(false);
+      
+      audioEl.addEventListener('play', handlePlay);
+      audioEl.addEventListener('pause', handlePause);
+      audioEl.addEventListener('ended', handleEnded);
+      
+      // Attempt to auto-play when URL is set and not loading
+      if (podcastAudioUrl && !isPodcastLoading) {
+        audioEl.load(); // Ensure the new src is loaded
+        audioEl.play().catch(e => console.warn("Autoplay was prevented:", e));
+      }
+      
+      return () => {
+        audioEl.removeEventListener('play', handlePlay);
+        audioEl.removeEventListener('pause', handlePause);
+        audioEl.removeEventListener('ended', handleEnded);
+      };
+    }
+  }, [podcastAudioUrl, isPodcastLoading]);
+
+
   if (!reportContent) {
     return null; // Don't render if no report content
   }
@@ -206,11 +229,11 @@ export function ReportActions({ reportContent }: ReportActionsProps) {
       </CardHeader>
       <CardContent className="flex flex-col gap-2 p-3">
         <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={handleEmailReport} disabled={isPodcastLoading}>
+            <Button variant="outline" size="sm" onClick={handleEmailReport} disabled={isPodcastLoading || isPodcastPlaying}>
             <Mail className="mr-2 h-4 w-4" />
             Email Report
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownloadReport} disabled={isPodcastLoading}>
+            <Button variant="outline" size="sm" onClick={handleDownloadReport} disabled={isPodcastLoading || isPodcastPlaying}>
             <Download className="mr-2 h-4 w-4" />
             Download
             </Button>
@@ -218,17 +241,17 @@ export function ReportActions({ reportContent }: ReportActionsProps) {
             {isPodcastLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : podcastAudioUrl ? (
-                 audioPlayerRef.current && !audioPlayerRef.current.paused ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />
+                 isPodcastPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />
             ) : (
                 <Podcast className="mr-2 h-4 w-4" />
             )}
-            {isPodcastLoading ? 'Generating...' : podcastAudioUrl ? (audioPlayerRef.current && !audioPlayerRef.current.paused ? 'Pause Podcast' : 'Play Podcast') : 'To Podcast'}
+            {isPodcastLoading ? 'Generating...' : podcastAudioUrl ? (isPodcastPlaying ? 'Pause Podcast' : 'Play Podcast') : 'To Podcast'}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleReadAloud} disabled={isPodcastLoading || !speechSynthRef.current}>
+            <Button variant="outline" size="sm" onClick={handleReadAloud} disabled={isPodcastLoading || isPodcastPlaying || !speechSynthRef.current}>
             {isSpeaking ? (
                 <Pause className="mr-2 h-4 w-4" />
             ) : (
-                <Play className="mr-2 h-4 w-4" />
+                <Volume2 className="mr-2 h-4 w-4" />
             )}
             {isSpeaking ? 'Pause Reading' : 'Read Aloud'}
             </Button>
@@ -240,14 +263,12 @@ export function ReportActions({ reportContent }: ReportActionsProps) {
               src={podcastAudioUrl} 
               controls 
               className="w-full h-10"
-              onPlay={() => setIsSpeaking(false)} // Stop browser read-aloud if podcast plays
-              onCanPlayThrough={() => {
-                if (audioPlayerRef.current && isPodcastLoading === false) { // Check isPodcastLoading to prevent auto-play on initial load if not intended
-                  // audioPlayerRef.current.play().catch(e => console.error("Error auto-playing audio:", e));
-                }
+              onPlay={() => {
+                setIsSpeaking(false); // Stop browser read-aloud if podcast plays
+                if (speechSynthRef.current?.speaking) speechSynthRef.current.cancel();
               }}
             />
-            <Button variant="ghost" size="icon" onClick={clearPodcast} aria-label="Clear podcast audio">
+            <Button variant="ghost" size="icon" onClick={clearPodcast} aria-label="Clear podcast audio" disabled={isPodcastLoading}>
               <XCircle className="h-5 w-5 text-destructive" />
             </Button>
           </div>
