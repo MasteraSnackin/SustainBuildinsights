@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -37,7 +38,6 @@ import { generateExecutiveSummary, type GenerateExecutiveSummaryInput, type Gene
 
 const formSchema = z.object({
   postcode: z.string().min(3, { message: 'Postcode must be at least 3 characters.' }).regex(/^[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][A-Z]{2}$/i, { message: 'Invalid UK postcode format.'}),
-  // apiKey field removed
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -88,11 +88,9 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
     resolver: zodResolver(formSchema),
     defaultValues: {
       postcode: '',
-      // apiKey default removed
     },
   });
 
-  // Removed useEffect for loading apiKey from localStorage
 
   useEffect(() => {
     onLoadingChange(isLoading);
@@ -117,7 +115,6 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
     const mockPropertyPrice = 500000; 
     setSubmittedPropertyPrice(mockPropertyPrice);
 
-    // Removed localStorage.setItem for apiKey
     
     try {
       const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -214,7 +211,7 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
     <div className="container mx-auto p-4 md:p-8">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleGenerateReport)} className="mb-8 p-6 bg-card rounded-lg shadow-md">
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-6 items-end"> {/* Changed md:grid-cols-2 to md:grid-cols-1 */}
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6 items-end">
             <FormField
               control={form.control}
               name="postcode"
@@ -228,14 +225,13 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
                 </FormItem>
               )}
             />
-            {/* PaTMa API Key FormField removed */}
           </div>
           <Button type="submit" disabled={isLoading} className="mt-6 w-full md:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Generate Report
           </Button>
            <p className="text-xs text-muted-foreground mt-2">
-            PaTMa API calls (mocked) are subject to rate limits and credit costs. Data freshness depends on API's last_updated fields. Free tier APIs for Energy/Climate/Transport/MapIt may have their own rate limits. Mapbox static images API may require an access token. Ensure `PATMA_API_KEY` is set in your `.env` file.
+            PaTMa API calls (mocked) are subject to rate limits and credit costs. Data freshness depends on API's last_updated fields. Free tier APIs for Energy/Climate/Transport/MapIt may have their own rate limits. Mapbox static images API may require an access token. Ensure `PATMA_API_KEY` (if used directly by services) and `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` are set in your `.env` or `.env.local` file.
           </p>
         </form>
       </Form>
@@ -259,13 +255,6 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
       {isAnyDataAvailable && (
         <div className="space-y-8">
             <ExecutiveSummary summaryData={executiveSummary} isLoading={isLoading && !executiveSummary} />
-            <MapLocation 
-              postcode={submittedPostcode} 
-              administrativeBoundaries={administrativeBoundaries}
-              conservationAreas={conservationAreas}
-              floodRiskData={floodRiskData}
-              isLoading={isLoading && (!submittedPostcode || !administrativeBoundaries)} 
-            />
             <ValuationMarketAnalysis
               askingPrices={askingPrices}
               soldPrices={soldPrices}
@@ -309,6 +298,13 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
               rentalComparables={rentalComparables}
               isLoading={isLoading && (!soldPricesFloorArea || !rentalComparables)}
             />
+             <MapLocation 
+              postcode={submittedPostcode} 
+              administrativeBoundaries={administrativeBoundaries}
+              conservationAreas={conservationAreas}
+              floodRiskData={floodRiskData}
+              isLoading={isLoading && (!submittedPostcode || !administrativeBoundaries)} 
+            />
         </div>
       )}
       
@@ -316,7 +312,7 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
         <div className="text-center py-12">
           <Image src="https://picsum.photos/seed/property/400/300" alt="Property Illustration" data-ai-hint="property illustration" className="mx-auto mb-6 rounded-lg shadow-md" width={400} height={300} />
           <h2 className="text-2xl font-semibold text-primary mb-2">Welcome to Property Insights Pro</h2>
-          <p className="text-muted-foreground">Enter a postcode above to generate your detailed redevelopment potential report. Ensure `PATMA_API_KEY` is set in your `.env` file.</p>
+          <p className="text-muted-foreground">Enter a postcode above to generate your detailed redevelopment potential report. Ensure relevant API keys (e.g., `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`) are set in your environment configuration.</p>
         </div>
       )}
     </div>
