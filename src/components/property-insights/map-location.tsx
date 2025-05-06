@@ -18,21 +18,21 @@ export function MapLocation({ postcode, isLoading }: MapLocationProps) {
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground mb-2">
-              Visual representation of the area around <strong>{postcode}</strong>.
+              Visual representation of the street view for <strong>{postcode}</strong>.
             </p>
             <div className="aspect-video w-full overflow-hidden rounded-md border">
               <Image
-                src={`https://picsum.photos/seed/${postcode.replace(/\s+/g, '')}/800/600`} // Use postcode as seed for varied image
-                alt={`Map placeholder for ${postcode}`}
+                src={`https://picsum.photos/seed/streetview-${postcode.replace(/\s+/g, '')}/800/600`} // Use postcode and context as seed
+                alt={`Google Street View placeholder for ${postcode}`}
                 width={800}
                 height={600}
                 className="object-cover w-full h-full"
-                data-ai-hint="map location"
+                data-ai-hint="street view"
                 priority={false} // Not critical path for LCP
               />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Note: This is a placeholder map image. For precise location, please use a dedicated mapping service.
+              Note: This is a placeholder image. An actual Google Street View image requires integration with the Google Street View API (which typically requires an API key).
             </p>
           </CardContent>
         </Card>
@@ -44,3 +44,4 @@ export function MapLocation({ postcode, isLoading }: MapLocationProps) {
     </ReportSection>
   );
 }
+
