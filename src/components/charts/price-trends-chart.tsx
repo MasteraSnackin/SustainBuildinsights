@@ -27,10 +27,12 @@ export function PriceTrendsChart({ data }: PriceTrendsChartProps) {
     );
   }
 
-  const chartData = data.map(item => ({
-    date: new Date(item.date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
-    averagePrice: item.averagePrice,
-  })).sort((a,b) => new Date(data.find(d => d.date === a.date)!.date).getTime() - new Date(data.find(d => d.date === b.date)!.date).getTime());
+  const chartData = [...data] // Create a shallow copy to avoid mutating the prop
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Sort by original date strings
+    .map(item => ({ // Then map to the format required by the chart
+      date: new Date(item.date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
+      averagePrice: item.averagePrice,
+    }));
 
 
   return (
@@ -88,3 +90,4 @@ export function PriceTrendsChart({ data }: PriceTrendsChartProps) {
     </Card>
   );
 }
+
