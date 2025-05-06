@@ -178,9 +178,15 @@ export function EnergyClimateEnvironment({
           </h3>
           {treeCoverageData ? (
             <Card>
-              <CardContent className="pt-6">
-                <DataDisplay label="Tree Coverage Percentage" value={treeCoverageData.coveragePercentage} unit="%" />
-                <DataDisplay label="Dominant Tree Types" value={treeCoverageData.dominantSpecies?.join(', ')} />
+              <CardContent className="pt-6 space-y-3">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">Tree Coverage Percentage</span>
+                    <span className="text-sm font-medium">{treeCoverageData.coveragePercentage}%</span>
+                  </div>
+                  <Progress value={treeCoverageData.coveragePercentage} aria-label={`Tree coverage ${treeCoverageData.coveragePercentage}%`} className="h-3 [&>div]:bg-green-500" />
+                </div>
+                <DataListDisplay label="Dominant Tree Types" items={treeCoverageData.dominantSpecies} renderItem={(species) => species} />
                 <p className="text-xs text-muted-foreground">Last Updated: {new Date(treeCoverageData.lastUpdated).toLocaleDateString()}</p>
                 {treeCoverageData.sourceUrl && (
                   <a href={treeCoverageData.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline mt-2 block">
