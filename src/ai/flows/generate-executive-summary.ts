@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -11,29 +10,29 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {
-  getAskingPrices, type AskingPrice,
-  getSoldPrices, type SoldPrice,
-  getPriceTrends, type PriceTrends,
-  getPlanningApplications, type PlanningApplication,
-  getConservationAreas, type ConservationArea,
-  getSchools, type School,
-  getCrimeRates, type CrimeRates,
-  getDemographics, type Demographics,
-  getStampDuty, type StampDuty,
-  getRentEstimates, type RentEstimates,
-  getSoldPricesFloorArea, type SoldPricesFloorArea,
-  getRentalComparables, type RentalComparables,
-  getEpcData, type EpcData,
-  getFloodRiskData, type FloodRiskData,
-  getAirQualityData, type AirQualityData,
-  getHistoricalClimateData, type HistoricalClimateData,
-  getTransportLinks, type TransportLink,
-  getAdministrativeBoundaries, type AdministrativeBoundaries,
-  getTreeCoverageData, type TreeCoverageData,
-  getSoilTypeData, type SoilTypeData,
-  getWaterSourceData, type WaterSourceData,
-  getIndustrialActivityData, type IndustrialActivityData
+import type {
+  AskingPrice,
+  SoldPrice,
+  PriceTrends,
+  PlanningApplication,
+  ConservationArea,
+  School,
+  CrimeRates,
+  Demographics,
+  StampDuty,
+  RentEstimates,
+  SoldPricesFloorArea,
+  RentalComparables,
+  EpcData,
+  FloodRiskData,
+  AirQualityData,
+  HistoricalClimateData,
+  TransportLink,
+  AdministrativeBoundaries,
+  TreeCoverageData,
+  SoilTypeData,
+  WaterSourceData,
+  IndustrialActivityData
 } from '@/services/patma';
 
 // Schemas for PaTMa data types
@@ -205,6 +204,34 @@ const PropertyDataContextSchema = z.object({
 
 export type GenerateExecutiveSummaryInput = z.infer<typeof PropertyDataContextSchema>;
 
+// Define a new schema for the prompt input, where complex objects are stringified
+const PromptInputSchema = z.object({
+  postcode: z.string(),
+  askingPrices: z.string().nullable(), // JSON string
+  soldPrices: z.string().nullable(), // JSON string
+  priceTrends: z.string().nullable(), // JSON string
+  planningApplications: z.string().nullable(), // JSON string
+  conservationAreas: z.string().nullable(), // JSON string
+  schools: z.string().nullable(), // JSON string
+  crimeRates: z.string().nullable(), // JSON string
+  demographics: z.string().nullable(), // JSON string
+  stampDuty: z.string().nullable(), // JSON string
+  rentEstimates: z.string().nullable(), // JSON string
+  soldPricesFloorArea: z.string().nullable(), // JSON string
+  rentalComparables: z.string().nullable(), // JSON string
+  epcData: z.string().nullable(), // JSON string
+  floodRiskData: z.string().nullable(), // JSON string
+  airQualityData: z.string().nullable(), // JSON string
+  historicalClimateData: z.string().nullable(), // JSON string
+  transportLinks: z.string().nullable(), // JSON string
+  administrativeBoundaries: z.string().nullable(), // JSON string
+  treeCoverageData: z.string().nullable(), // JSON string
+  soilTypeData: z.string().nullable(), // JSON string
+  waterSourceData: z.string().nullable(), // JSON string
+  industrialActivityData: z.string().nullable(), // JSON string
+});
+
+
 const GenerateExecutiveSummaryOutputSchema = z.object({
   summary: z.string().describe('The executive summary of the property redevelopment potential.'),
 });
@@ -216,7 +243,7 @@ export async function generateExecutiveSummary(input: GenerateExecutiveSummaryIn
 
 const generateExecutiveSummaryPrompt = ai.definePrompt({
   name: 'generateExecutiveSummaryPrompt',
-  input: {schema: PropertyDataContextSchema},
+  input: {schema: PromptInputSchema }, // Use the new schema with stringified JSON
   output: {schema: GenerateExecutiveSummaryOutputSchema},
   prompt: `You are an expert property investment analyst. You are provided with comprehensive data from various (mocked) PaTMa API endpoints about a property at the given postcode: {{{postcode}}}.
 Your task is to generate a detailed executive summary of the property's redevelopment potential. You *MUST* use *ALL* the provided data sections in your analysis.
@@ -224,49 +251,49 @@ Your task is to generate a detailed executive summary of the property's redevelo
 Here's the data you have access to:
 
 **1. Property Valuation & Market Analysis:**
-   - Asking Prices: {{#if askingPrices}} {{jsonStringify askingPrices}} {{else}}Not available{{/if}}
-   - Sold Prices: {{#if soldPrices}} {{jsonStringify soldPrices}} {{else}}Not available{{/if}}
-   - Price Trends (5-year): {{#if priceTrends}} {{jsonStringify priceTrends}} {{else}}Not available{{/if}}
-   - Sold Prices per Floor Area: {{#if soldPricesFloorArea}} {{jsonStringify soldPricesFloorArea}} {{else}}Not available{{/if}}
+   - Asking Prices: {{#if askingPrices}} {{{askingPrices}}} {{else}}Not available{{/if}}
+   - Sold Prices: {{#if soldPrices}} {{{soldPrices}}} {{else}}Not available{{/if}}
+   - Price Trends (5-year): {{#if priceTrends}} {{{priceTrends}}} {{else}}Not available{{/if}}
+   - Sold Prices per Floor Area: {{#if soldPricesFloorArea}} {{{soldPricesFloorArea}}} {{else}}Not available{{/if}}
    Analyze local asking prices, local sold prices (last 5 years), calculate price-per-floor-area metrics, and analyze 5-year price trends.
 
 **2. Planning & Regulatory Landscape:**
-   - Recent Planning Applications (last 5 years): {{#if planningApplications}} {{jsonStringify planningApplications}} {{else}}Not available{{/if}}
-   - Conservation Areas: {{#if conservationAreas}} {{jsonStringify conservationAreas}} {{else}}Not available{{/if}}
+   - Recent Planning Applications (last 5 years): {{#if planningApplications}} {{{planningApplications}}} {{else}}Not available{{/if}}
+   - Conservation Areas: {{#if conservationAreas}} {{{conservationAreas}}} {{else}}Not available{{/if}}
    List recent approved/rejected planning applications (last 5 years), identify conservation areas or Article 4 restrictions (if inferable), and assess likelihood of planning permission success based on the data.
 
 **3. Location Overview & Administrative Details:**
-   - Administrative Boundaries: {{#if administrativeBoundaries}} {{jsonStringify administrativeBoundaries}} {{else}}Not available{{/if}}
+   - Administrative Boundaries: {{#if administrativeBoundaries}} {{{administrativeBoundaries}}} {{else}}Not available{{/if}}
    Summarize administrative details (Local Authority, Council, Constituency, Ward, Country) and coordinates.
 
 **4. Neighborhood Insights:**
-   - Schools & Ofsted Ratings: {{#if schools}} {{jsonStringify schools}} {{else}}Not available{{/if}}
-   - Crime Rates: {{#if crimeRates}} {{jsonStringify crimeRates}} {{else}}Not available{{/if}}
-   - Demographics (Age & Income): {{#if demographics}} {{jsonStringify demographics}} {{else}}Not available{{/if}}
+   - Schools & Ofsted Ratings: {{#if schools}} {{{schools}}} {{else}}Not available{{/if}}
+   - Crime Rates: {{#if crimeRates}} {{{crimeRates}}} {{else}}Not available{{/if}}
+   - Demographics (Age & Income): {{#if demographics}} {{{demographics}}} {{else}}Not available{{/if}}
    Evaluate school Ofsted ratings, compare crime rates (qualitatively if regional average not provided), and profile demographics for target tenant/buyer alignment.
 
 **5. Energy, Climate & Environment:**
-   - EPC Data: {{#if epcData}} {{jsonStringify epcData}} {{else}}Not available{{/if}}
-   - Flood Risk: {{#if floodRiskData}} {{jsonStringify floodRiskData}} {{else}}Not available{{/if}}
-   - Air Quality: {{#if airQualityData}} {{jsonStringify airQualityData}} {{else}}Not available{{/if}}
-   - Historical Climate: {{#if historicalClimateData}} {{jsonStringify historicalClimateData}} {{else}}Not available{{/if}}
-   - Tree Coverage: {{#if treeCoverageData}} {{jsonStringify treeCoverageData}} {{else}}Not available{{/if}}
-   - Soil Type: {{#if soilTypeData}} {{jsonStringify soilTypeData}} {{else}}Not available{{/if}}
-   - Water Sources: {{#if waterSourceData}} {{jsonStringify waterSourceData}} {{else}}Not available{{/if}}
-   - Nearby Industrial Activity: {{#if industrialActivityData}} {{jsonStringify industrialActivityData}} {{else}}Not available{{/if}}
+   - EPC Data: {{#if epcData}} {{{epcData}}} {{else}}Not available{{/if}}
+   - Flood Risk: {{#if floodRiskData}} {{{floodRiskData}}} {{else}}Not available{{/if}}
+   - Air Quality: {{#if airQualityData}} {{{airQualityData}}} {{else}}Not available{{/if}}
+   - Historical Climate: {{#if historicalClimateData}} {{{historicalClimateData}}} {{else}}Not available{{/if}}
+   - Tree Coverage: {{#if treeCoverageData}} {{{treeCoverageData}}} {{else}}Not available{{/if}}
+   - Soil Type: {{#if soilTypeData}} {{{soilTypeData}}} {{else}}Not available{{/if}}
+   - Water Sources: {{#if waterSourceData}} {{{waterSourceData}}} {{else}}Not available{{/if}}
+   - Nearby Industrial Activity: {{#if industrialActivityData}} {{{industrialActivityData}}} {{else}}Not available{{/if}}
    Summarize EPC rating, flood risk, air quality, historical climate data, tree coverage, soil type, water sources and industrial activity. Note any implications for redevelopment (e.g., insulation upgrades, flood mitigation, site constraints).
 
 **6. Transport Links:**
-   - Transport Options: {{#if transportLinks}} {{jsonStringify transportLinks}} {{else}}Not available{{/if}}
+   - Transport Options: {{#if transportLinks}} {{{transportLinks}}} {{else}}Not available{{/if}}
    Describe key local transport options (train, bus, road access) and their proximity.
 
 **7. Financial Feasibility:**
-   - Stamp Duty (for a typical market price): {{#if stampDuty}} {{jsonStringify stampDuty}} {{else}}Not available{{/if}}
-   - Rent Estimates: {{#if rentEstimates}} {{jsonStringify rentEstimates}} {{else}}Not available{{/if}}
+   - Stamp Duty (for a typical market price): {{#if stampDuty}} {{{stampDuty}}} {{else}}Not available{{/if}}
+   - Rent Estimates: {{#if rentEstimates}} {{{rentEstimates}}} {{else}}Not available{{/if}}
    Calculate stamp duty for acquisition (assume a typical market price of £500,000 for the area if not directly provided for SDLT context), estimate rental yield using local rent data, and model ROI with refurbishment cost assumptions (use £150/sqft baseline; if floor area is not provided, make a reasonable assumption for a typical property, e.g., 1000 sqft, and state this assumption).
 
 **8. Case Studies & Comparables:**
-   - Rental Comparables: {{#if rentalComparables}} {{jsonStringify rentalComparables}} {{else}}Not available{{/if}}
+   - Rental Comparables: {{#if rentalComparables}} {{{rentalComparables}}} {{else}}Not available{{/if}}
    Use the provided sold price per floor area and rental comparables data to discuss the market. Highlight profit margins and time-to-sale trends IF inferable from data (state if not).
 
 Structure your executive summary to cover all these aspects, highlighting key opportunities and risks for redevelopment based *solely* on the provided data.
@@ -280,15 +307,39 @@ Executive Summary for Postcode: {{{postcode}}}
 const generateExecutiveSummaryFlow = ai.defineFlow(
   {
     name: 'generateExecutiveSummaryFlow',
-    inputSchema: PropertyDataContextSchema, // Use the comprehensive schema
+    inputSchema: PropertyDataContextSchema, 
     outputSchema: GenerateExecutiveSummaryOutputSchema,
   },
   async (propertyData) => {
-    // All data is now expected to be passed directly in the `propertyData` input object.
-    // The caller (e.g., the dashboard component) will be responsible for fetching this data.
-    // This flow now only focuses on passing the collected data to the prompt.
+    // Manually stringify complex objects for the prompt
+    const handlebarsSafeInput = {
+      postcode: propertyData.postcode,
+      askingPrices: propertyData.askingPrices ? JSON.stringify(propertyData.askingPrices) : null,
+      soldPrices: propertyData.soldPrices ? JSON.stringify(propertyData.soldPrices) : null,
+      priceTrends: propertyData.priceTrends ? JSON.stringify(propertyData.priceTrends) : null,
+      planningApplications: propertyData.planningApplications ? JSON.stringify(propertyData.planningApplications) : null,
+      conservationAreas: propertyData.conservationAreas ? JSON.stringify(propertyData.conservationAreas) : null,
+      schools: propertyData.schools ? JSON.stringify(propertyData.schools) : null,
+      crimeRates: propertyData.crimeRates ? JSON.stringify(propertyData.crimeRates) : null,
+      demographics: propertyData.demographics ? JSON.stringify(propertyData.demographics) : null,
+      stampDuty: propertyData.stampDuty ? JSON.stringify(propertyData.stampDuty) : null,
+      rentEstimates: propertyData.rentEstimates ? JSON.stringify(propertyData.rentEstimates) : null,
+      soldPricesFloorArea: propertyData.soldPricesFloorArea ? JSON.stringify(propertyData.soldPricesFloorArea) : null,
+      rentalComparables: propertyData.rentalComparables ? JSON.stringify(propertyData.rentalComparables) : null,
+      epcData: propertyData.epcData ? JSON.stringify(propertyData.epcData) : null,
+      floodRiskData: propertyData.floodRiskData ? JSON.stringify(propertyData.floodRiskData) : null,
+      airQualityData: propertyData.airQualityData ? JSON.stringify(propertyData.airQualityData) : null,
+      historicalClimateData: propertyData.historicalClimateData ? JSON.stringify(propertyData.historicalClimateData) : null,
+      transportLinks: propertyData.transportLinks ? JSON.stringify(propertyData.transportLinks) : null,
+      administrativeBoundaries: propertyData.administrativeBoundaries ? JSON.stringify(propertyData.administrativeBoundaries) : null,
+      treeCoverageData: propertyData.treeCoverageData ? JSON.stringify(propertyData.treeCoverageData) : null,
+      soilTypeData: propertyData.soilTypeData ? JSON.stringify(propertyData.soilTypeData) : null,
+      waterSourceData: propertyData.waterSourceData ? JSON.stringify(propertyData.waterSourceData) : null,
+      industrialActivityData: propertyData.industrialActivityData ? JSON.stringify(propertyData.industrialActivityData) : null,
+    };
 
-    const {output} = await generateExecutiveSummaryPrompt(propertyData);
+    const {output} = await generateExecutiveSummaryPrompt(handlebarsSafeInput);
     return output!;
   }
 );
+
