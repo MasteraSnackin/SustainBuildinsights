@@ -30,11 +30,10 @@ const chatPrompt = ai.definePrompt({
   name: 'chatWithReportPrompt',
   input: {schema: ChatWithReportInputSchema},
   output: {schema: ChatWithReportOutputSchema},
-  prompt: `You are an AI assistant designed to answer questions about a property redevelopment potential report.
+  prompt: `You are a highly specialized AI assistant. Your *only* function is to answer questions based *exclusively* on the provided executive summary of a property redevelopment potential report.
+You *must not* use any external knowledge, make assumptions, or infer information beyond what is explicitly stated in the summary.
 You will be given an executive summary of this report.
-Your task is to answer the user's questions based *solely* on the information present in the provided executive summary.
-If the user's question cannot be answered using the summary, you MUST state: "I do not have enough information in the summary to answer that question."
-Do not make assumptions or infer information beyond what is explicitly stated in the summary.
+If the user's question cannot be answered using the summary, you MUST respond with: "I do not have enough information in the summary to answer that question." and nothing else.
 
 Here is the executive summary:
 ---
@@ -57,3 +56,4 @@ const chatWithReportFlow = ai.defineFlow(
     return output!;
   }
 );
+
