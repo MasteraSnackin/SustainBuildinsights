@@ -1,5 +1,5 @@
 
-# Property Insights Pro
+# PSustainBuildinsight
 
 Property Insights Pro is a Next.js application designed to provide comprehensive property redevelopment analysis. It leverages the PaTMa API for property data, Genkit for AI-powered insights and summaries, and Mapbox Static Images API for location visualization. Users can input a UK postcode to generate a detailed report covering various aspects of a property's potential.
 
