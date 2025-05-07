@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 import { ExecutiveSummary } from './property-insights/executive-summary';
 import { ValuationMarketAnalysis } from './property-insights/valuation-market-analysis';
@@ -51,6 +52,7 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false); // State to track client-side mount
 
   // State for API data
   const [executiveSummary, setExecutiveSummary] = useState<GenerateExecutiveSummaryOutput | null>(null);
@@ -90,6 +92,9 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
     },
   });
 
+  useEffect(() => {
+    setIsClient(true); // Set to true once component mounts on client
+  }, []);
 
   useEffect(() => {
     onLoadingChange(isLoading);
@@ -111,14 +116,14 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
     setIsLoading(true);
     setApiError(null);
     setSubmittedPostcode(data.postcode);
-    const mockPropertyPriceForStampDuty = 500000; // This price is used for stamp duty calculation.
+    const mockPropertyPriceForStampDuty = 500000; 
     setSubmittedPropertyPrice(mockPropertyPriceForStampDuty);
 
     
     try {
       const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
       let callCount = 0;
-      const maxCallsPerMinute = 20; // Increased slightly as we have more calls
+      const maxCallsPerMinute = 20; 
       const callInterval = 60000 / maxCallsPerMinute; 
 
       const fetchDataWithRateLimit = async <T>(fetchFn: () => Promise<T>): Promise<T> => {
@@ -127,7 +132,6 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
         return fetchFn();
       };
       
-      // Fetch all data
       const [
         askingPricesData, soldPricesData, priceTrendsData, planningApplicationsData,
         conservationAreasData, schoolsData, crimeRatesData, demographicsData,
@@ -182,7 +186,6 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
       setWaterSourceData(waterSourceApiDataResult);
       setIndustrialActivityData(industrialActivityApiDataResult);
       
-      // Prepare comprehensive input for executive summary
       const executiveSummaryInput: GenerateExecutiveSummaryInput = {
         postcode: data.postcode,
         askingPrices: askingPricesData,
@@ -242,14 +245,18 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
                 <FormItem>
                   <FormLabel>Postcode</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., SW1A 1AA" {...field} />
+                    {isClient ? (
+                      <Input placeholder="e.g., SW1A 1AA" {...field} />
+                    ) : (
+                      <Skeleton className="h-10 w-full" />
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          <Button type="submit" disabled={isLoading} className="mt-6 w-full md:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Button type="submit" disabled={isLoading || !isClient} className="mt-6 w-full md:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Generate Report
           </Button>
@@ -341,3 +348,5 @@ export function PropertyInsightsDashboard({ onSummaryGenerated, onLoadingChange,
     </div>
   );
 }
+
+    
